@@ -261,13 +261,6 @@ export default function OrderTracker({ user }) {
         {/* Searched Order Details */}
         {searchedOrder && (
           <div ref={detailsRef} className="tracker-results-container fade-in">
-            {/* Simulation Status Toolbar */}
-            <div className="simulation-toolbar">
-              <span className="simulation-label">DEVELOPER SIMULATOR:</span>
-              <button className="btn btn-dark btn-mini" onClick={handleAdvanceStatus}>
-                ADVANCE SHIPPING STATUS &rarr;
-              </button>
-            </div>
 
             {/* Stepper Timeline */}
             <div className="tracker-stepper">

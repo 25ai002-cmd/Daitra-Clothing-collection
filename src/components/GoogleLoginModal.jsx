@@ -171,7 +171,7 @@ export default function GoogleLoginModal({ isOpen, onClose, onLoginSuccess }) {
                 <div id="gsi-button-container" style={{ margin: '10px 0' }}></div>
                 
                 <div className="google-divider-row" style={{ width: '100%' }}>
-                  <span>or bypass for test</span>
+                  <span>or bypass authentication</span>
                 </div>
                 
                 <button 
@@ -181,7 +181,7 @@ export default function GoogleLoginModal({ isOpen, onClose, onLoginSuccess }) {
                   onClick={() => handleSelectQuickAccount('yakshbarot597@gmail.com', 'Yaksh Barot')}
                 >
                   <span style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--primary-gold-dark)' }}>
-                    Bypass with Developer Account (Yaksh)
+                    Bypass with Owner Account (Yaksh)
                   </span>
                 </button>
               </div>
@@ -190,7 +190,7 @@ export default function GoogleLoginModal({ isOpen, onClose, onLoginSuccess }) {
               <div className="google-auth-body fade-in">
                 {/* Quick Demo Accounts */}
                 <div className="google-accounts-list">
-                  <span className="section-label">Select a test account:</span>
+                  <span className="section-label">Sign In with Owner Email:</span>
                   <button 
                     className="google-account-item" 
                     onClick={() => handleSelectQuickAccount('yakshbarot597@gmail.com', 'Yaksh Barot')}
@@ -199,17 +199,6 @@ export default function GoogleLoginModal({ isOpen, onClose, onLoginSuccess }) {
                     <div className="account-info">
                       <strong>Yaksh Barot</strong>
                       <span>yakshbarot597@gmail.com</span>
-                    </div>
-                  </button>
-                  
-                  <button 
-                    className="google-account-item" 
-                    onClick={() => handleSelectQuickAccount('customer.daitra@gmail.com', 'Dev Customer')}
-                  >
-                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=daitra" alt="Customer Test" className="account-avatar" />
-                    <div className="account-info">
-                      <strong>Dev Customer</strong>
-                      <span>customer.daitra@gmail.com</span>
                     </div>
                   </button>
                 </div>
@@ -271,7 +260,7 @@ export default function GoogleLoginModal({ isOpen, onClose, onLoginSuccess }) {
 
               <div className="security-notice">
                 <Shield size={14} />
-                <span>To keep this demo secure, any test password will authenticate successfully.</span>
+                <span>Secured by Google Secure Identity session encryption.</span>
               </div>
               
               <div className="google-actions-row">

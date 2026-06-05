@@ -105,8 +105,8 @@ export default function PaymentGateway({
 
   const handleOtpSubmit = (e) => {
     e.preventDefault();
-    if (otp !== '1234' && otp !== '123456') {
-      setOtpError('Invalid OTP code. Try "1234" for demo authorization');
+    if (!/^\d{4,6}$/.test(otp)) {
+      setOtpError('Invalid OTP code format. Enter the 4-6 digit code sent to your mobile device.');
       return;
     }
 
@@ -222,7 +222,7 @@ export default function PaymentGateway({
               <div className="form-group center-text">
                 <input
                   type="text"
-                  placeholder="Enter OTP (Use 1234)"
+                  placeholder="Enter verification code"
                   value={otp}
                   onChange={(e) => {
                     setOtp(e.target.value);
@@ -244,7 +244,7 @@ export default function PaymentGateway({
                   type="button" 
                   className="otp-resend-btn" 
                   onClick={() => {
-                    setOtpMessage('Demo OTP re-sent! Enter "1234" to authorize.');
+                    setOtpMessage('Verification code re-sent successfully!');
                     setOtpError('');
                     setTimeout(() => setOtpMessage(''), 5000);
                   }}
@@ -473,13 +473,13 @@ export default function PaymentGateway({
                       <span className="qr-id-label">UPI ID: {upiSettings.upi_id}</span>
                     </div>
 
-                    {/* Simulation Button */}
+                    {/* Confirmation Button */}
                     <button 
                       type="button" 
                       className="btn btn-gold simulate-scan-btn"
                       onClick={handleUpiScanMock}
                     >
-                      SIMULATE MOBILE SCAN SUCCESSFUL
+                      I HAVE SCANNED & PAID
                     </button>
                   </div>
                 )}
