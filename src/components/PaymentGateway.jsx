@@ -6,6 +6,7 @@ export default function PaymentGateway({
   isOpen,
   amount,
   customerInfo,
+  orderId,
   onSuccess,
   onCancel
 }) {
@@ -19,10 +20,11 @@ export default function PaymentGateway({
   const [upiSettings, setUpiSettings] = useState({ upi_id: 'daitracouture@okaxis', upi_qr_url: '' });
   
   // UPI payment options state
-  const [upiMethod, setUpiMethod] = useState('id'); // 'id' | 'qr'
+  const [upiMethod, setUpiMethod] = useState('id'); // 'app' | 'id' | 'qr'
   const [upiIdInput, setUpiIdInput] = useState('');
   const [upiHandle, setUpiHandle] = useState('@okaxis');
   const [upiIdError, setUpiIdError] = useState('');
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
   
   // Card Form State
   const [cardData, setCardData] = useState({
@@ -42,6 +44,16 @@ export default function PaymentGateway({
         }
       };
       loadUpiSettings();
+
+      // Mobile device detection
+      const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+      const isMobile = mobileRegex.test(navigator.userAgent) || window.innerWidth <= 768;
+      setIsMobileDevice(isMobile);
+      if (isMobile) {
+        setUpiMethod('app');
+      } else {
+        setUpiMethod('id');
+      }
     }
   }, [isOpen]);
 
@@ -168,6 +180,32 @@ export default function PaymentGateway({
         }, 2000);
       }, 1500);
     }, 1500);
+  };
+
+  const handleUpiAppPay = () => {
+    const adminUpi = upiSettings.upi_id || 'daitracouture@okaxis';
+    const pa = encodeURIComponent(adminUpi);
+    const pn = encodeURIComponent('DAITRA Couture');
+    const tn = encodeURIComponent(`DAITRA Order ${orderId || ''}`);
+    const upiUrl = `upi://pay?pa=${pa}&pn=${pn}&am=${amount}&cu=INR&tn=${tn}`;
+    
+    // Attempt redirect to installed app handler
+    window.location.href = upiUrl;
+
+    // Start background simulation
+    setProcessing(true);
+    setProcessStep('Launching your default UPI App...');
+    
+    setTimeout(() => {
+      setProcessStep('Awaiting verification from UPI network...');
+      setTimeout(() => {
+        setProcessStep('Verifying transaction token...');
+        setTimeout(() => {
+          setProcessing(false);
+          onSuccess(`Online UPI (App Redirect: ${adminUpi})`);
+        }, 1500);
+      }, 2000);
+    }, 3000);
   };
 
   return (
@@ -346,24 +384,65 @@ export default function PaymentGateway({
 
             {activeTab === 'upi' && (
               <div className="gateway-upi-payment">
-                <div className="upi-toggle-row">
+                <div className="upi-toggle-row three-cols">
+                  <button 
+                    type="button" 
+                    className={`upi-toggle-btn ${upiMethod === 'app' ? 'active' : ''}`}
+                    onClick={() => setUpiMethod('app')}
+                  >
+                    UPI App
+                  </button>
                   <button 
                     type="button" 
                     className={`upi-toggle-btn ${upiMethod === 'id' ? 'active' : ''}`}
                     onClick={() => setUpiMethod('id')}
                   >
-                    Pay via UPI ID
+                    UPI ID
                   </button>
                   <button 
                     type="button" 
                     className={`upi-toggle-btn ${upiMethod === 'qr' ? 'active' : ''}`}
                     onClick={() => setUpiMethod('qr')}
                   >
-                    Scan QR Code
+                    QR Scan
                   </button>
                 </div>
 
-                {upiMethod === 'id' ? (
+                {upiMethod === 'app' && (
+                  <div className="gateway-upi-app-pay">
+                    <h4>Pay via Installed UPI App</h4>
+                    <p className="scan-instructions">
+                      Click below to launch GPay, PhonePe, Paytm, BHIM, or any other UPI app installed on your phone to complete the payment.
+                    </p>
+                    
+                    {!isMobileDevice && (
+                      <div className="desktop-upi-warning">
+                        <span>⚠️ <strong>Note:</strong> You are on a desktop. This method works best on smartphones. You can still test redirecting or use <strong>UPI ID</strong> / <strong>Scan QR</strong> above.</span>
+                      </div>
+                    )}
+
+                    <div className="upi-app-info-card">
+                      <div className="upi-app-info-row">
+                        <span className="payee-label">Paying to:</span>
+                        <strong className="payee-val">{upiSettings.upi_id}</strong>
+                      </div>
+                      <div className="upi-app-info-row">
+                        <span className="payee-label">Amount:</span>
+                        <strong className="payee-amount">₹{amount.toLocaleString('en-IN')}</strong>
+                      </div>
+                    </div>
+
+                    <button 
+                      type="button" 
+                      className="btn btn-gold btn-upi-app-redirect"
+                      onClick={handleUpiAppPay}
+                    >
+                      PAY SECURELY VIA UPI APP
+                    </button>
+                  </div>
+                )}
+
+                {upiMethod === 'id' && (
                   <form onSubmit={handleUpiIdPay} className="gateway-upi-id-form">
                     <div className="form-group">
                       <label>Enter UPI ID / VPA</label>
@@ -421,7 +500,9 @@ export default function PaymentGateway({
                       PAY SECURELY ₹{amount.toLocaleString('en-IN')}
                     </button>
                   </form>
-                ) : (
+                )}
+
+                {upiMethod === 'qr' && (
                   <div className="gateway-upi-scan">
                     <h4>Scan QR Code to Pay</h4>
                     <p className="scan-instructions">Open your UPI app (GPay, PhonePe, Paytm, BHIM) and scan this QR code to complete the transaction.</p>

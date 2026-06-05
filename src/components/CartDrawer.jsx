@@ -593,6 +593,7 @@ export default function CartDrawer({
           isOpen={isPaymentGatewayOpen}
           amount={finalTotal}
           customerInfo={formData}
+          orderId={orderId}
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}
         />
