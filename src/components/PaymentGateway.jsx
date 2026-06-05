@@ -18,6 +18,12 @@ export default function PaymentGateway({
   const [otpMessage, setOtpMessage] = useState('');
   const [upiSettings, setUpiSettings] = useState({ upi_id: 'daitracouture@okaxis', upi_qr_url: '' });
   
+  // UPI payment options state
+  const [upiMethod, setUpiMethod] = useState('id'); // 'id' | 'qr'
+  const [upiIdInput, setUpiIdInput] = useState('');
+  const [upiHandle, setUpiHandle] = useState('@okaxis');
+  const [upiIdError, setUpiIdError] = useState('');
+  
   // Card Form State
   const [cardData, setCardData] = useState({
     number: '',
@@ -131,6 +137,39 @@ export default function PaymentGateway({
     }, 1500);
   };
 
+  const handleUpiIdPay = (e) => {
+    e.preventDefault();
+    if (!upiIdInput.trim()) {
+      setUpiIdError('Please enter your UPI ID');
+      return;
+    }
+    
+    const fullUpi = `${upiIdInput.trim()}${upiHandle}`;
+    // Basic format verification (username@bank)
+    if (!/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(fullUpi)) {
+      setUpiIdError('Invalid UPI VPA address format');
+      return;
+    }
+
+    setUpiIdError('');
+    setProcessing(true);
+    setProcessStep('Verifying UPI VPA address...');
+    
+    setTimeout(() => {
+      setProcessStep(`Sending secure collect request to ${fullUpi}...`);
+      setTimeout(() => {
+        setProcessStep('Awaiting approval in your UPI mobile app (GPay/PhonePe)...');
+        setTimeout(() => {
+          setProcessStep('UPI Payment Authorized!');
+          setTimeout(() => {
+            setProcessing(false);
+            onSuccess(`Online UPI (VPA: ${fullUpi})`);
+          }, 1000);
+        }, 2000);
+      }, 1500);
+    }, 1500);
+  };
+
   return (
     <div className="gateway-overlay">
       <div className="gateway-modal">
@@ -233,7 +272,7 @@ export default function PaymentGateway({
               onClick={() => setActiveTab('upi')}
             >
               <QrCode size={18} />
-              <span>UPI Scan QR</span>
+              <span>UPI Payments</span>
             </button>
           </aside>
 
@@ -306,65 +345,144 @@ export default function PaymentGateway({
             )}
 
             {activeTab === 'upi' && (
-              <div className="gateway-upi-scan">
-                <h4>Scan QR Code to Pay</h4>
-                <p className="scan-instructions">Open your UPI app (GPay, PhonePe, Paytm, BHIM) and scan this QR code to complete the transaction.</p>
-                
-                {/* SVG Visual QR Mockup */}
-                <div className="qr-code-box-wrapper">
-                  <div className="mock-qr-border">
-                    {upiSettings.upi_qr_url ? (
-                      <img src={upiSettings.upi_qr_url} alt="UPI QR Scanner" className="owner-qr-image" />
-                    ) : (
-                      <svg className="qr-svg" viewBox="0 0 100 100" width="160" height="160">
-                        {/* Corner Anchors */}
-                        <rect x="5" y="5" width="25" height="25" fill="#D4AF37" stroke="#000" strokeWidth="2" />
-                        <rect x="10" y="10" width="15" height="15" fill="#fff" />
-                        <rect x="13" y="13" width="9" height="9" fill="#000" />
-                        
-                        <rect x="70" y="5" width="25" height="25" fill="#D4AF37" stroke="#000" strokeWidth="2" />
-                        <rect x="75" y="10" width="15" height="15" fill="#fff" />
-                        <rect x="78" y="13" width="9" height="9" fill="#000" />
-
-                        <rect x="5" y="70" width="25" height="25" fill="#D4AF37" stroke="#000" strokeWidth="2" />
-                        <rect x="10" y="75" width="15" height="15" fill="#fff" />
-                        <rect x="13" y="78" width="9" height="9" fill="#000" />
-
-                        {/* Random Grid Data Representing QR Patterns */}
-                        <rect x="35" y="5" width="5" height="15" fill="#000" />
-                        <rect x="45" y="15" width="15" height="5" fill="#000" />
-                        <rect x="35" y="25" width="10" height="10" fill="#000" />
-                        
-                        <rect x="5" y="35" width="15" height="5" fill="#000" />
-                        <rect x="15" y="45" width="10" height="15" fill="#000" />
-                        <rect x="5" y="60" width="5" height="5" fill="#000" />
-
-                        <rect x="35" y="45" width="30" height="5" fill="#000" />
-                        <rect x="45" y="55" width="5" height="15" fill="#000" />
-                        <rect x="35" y="75" width="15" height="10" fill="#000" />
-
-                        <rect x="75" y="35" width="20" height="5" fill="#000" />
-                        <rect x="70" y="45" width="10" height="15" fill="#000" />
-                        <rect x="85" y="65" width="10" height="10" fill="#000" />
-                        <rect x="70" y="80" width="15" height="15" fill="#000" />
-                        
-                        {/* Central Small Logo */}
-                        <circle cx="50" cy="50" r="10" fill="#000" stroke="#D4AF37" strokeWidth="1.5" />
-                        <text x="50" y="53" fontSize="8" fontWeight="bold" fill="#D4AF37" textAnchor="middle">D</text>
-                      </svg>
-                    )}
-                  </div>
-                  <span className="qr-id-label">UPI ID: {upiSettings.upi_id}</span>
+              <div className="gateway-upi-payment">
+                <div className="upi-toggle-row">
+                  <button 
+                    type="button" 
+                    className={`upi-toggle-btn ${upiMethod === 'id' ? 'active' : ''}`}
+                    onClick={() => setUpiMethod('id')}
+                  >
+                    Pay via UPI ID
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`upi-toggle-btn ${upiMethod === 'qr' ? 'active' : ''}`}
+                    onClick={() => setUpiMethod('qr')}
+                  >
+                    Scan QR Code
+                  </button>
                 </div>
 
-                {/* Simulation Button */}
-                <button 
-                  type="button" 
-                  className="btn btn-gold simulate-scan-btn"
-                  onClick={handleUpiScanMock}
-                >
-                  SIMULATE MOBILE SCAN SUCCESSFUL
-                </button>
+                {upiMethod === 'id' ? (
+                  <form onSubmit={handleUpiIdPay} className="gateway-upi-id-form">
+                    <div className="form-group">
+                      <label>Enter UPI ID / VPA</label>
+                      <div className="upi-input-group">
+                        <input
+                          type="text"
+                          placeholder="e.g. seema.singh"
+                          value={upiIdInput}
+                          onChange={(e) => {
+                            setUpiIdInput(e.target.value);
+                            setUpiIdError('');
+                          }}
+                          className={`upi-vpa-input ${upiIdError ? 'error' : ''}`}
+                          required
+                        />
+                        <select
+                          value={upiHandle}
+                          onChange={(e) => setUpiHandle(e.target.value)}
+                          className="upi-handle-select"
+                        >
+                          <option value="@okaxis">@okaxis</option>
+                          <option value="@okhdfcbank">@okhdfcbank</option>
+                          <option value="@okicici">@okicici</option>
+                          <option value="@okSBI">@okSBI</option>
+                          <option value="@ybl">@ybl</option>
+                          <option value="@paytm">@paytm</option>
+                          <option value="@gpay">@gpay</option>
+                          <option value="@upi">@upi</option>
+                        </select>
+                      </div>
+                      {upiIdError && <span className="field-error">{upiIdError}</span>}
+                    </div>
+
+                    <div className="upi-quick-handles">
+                      <span>Popular handles:</span>
+                      <div className="quick-handles-grid">
+                        {['@okaxis', '@okhdfcbank', '@okSBI', '@ybl', '@paytm'].map((h) => (
+                          <button
+                            key={h}
+                            type="button"
+                            className={`quick-handle-tag ${upiHandle === h ? 'selected' : ''}`}
+                            onClick={() => setUpiHandle(h)}
+                          >
+                            {h}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="upi-help-text">
+                      A collect request will be sent to this VPA address. Open your linked UPI app to authorize.
+                    </div>
+
+                    <button type="submit" className="btn btn-gold pay-now-submit">
+                      PAY SECURELY ₹{amount.toLocaleString('en-IN')}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="gateway-upi-scan">
+                    <h4>Scan QR Code to Pay</h4>
+                    <p className="scan-instructions">Open your UPI app (GPay, PhonePe, Paytm, BHIM) and scan this QR code to complete the transaction.</p>
+                    
+                    {/* SVG Visual QR Mockup */}
+                    <div className="qr-code-box-wrapper">
+                      <div className="mock-qr-border">
+                        {upiSettings.upi_qr_url ? (
+                          <img src={upiSettings.upi_qr_url} alt="UPI QR Scanner" className="owner-qr-image" />
+                        ) : (
+                          <svg className="qr-svg" viewBox="0 0 100 100" width="160" height="160">
+                            {/* Corner Anchors */}
+                            <rect x="5" y="5" width="25" height="25" fill="#D4AF37" stroke="#000" strokeWidth="2" />
+                            <rect x="10" y="10" width="15" height="15" fill="#fff" />
+                            <rect x="13" y="13" width="9" height="9" fill="#000" />
+                            
+                            <rect x="70" y="5" width="25" height="25" fill="#D4AF37" stroke="#000" strokeWidth="2" />
+                            <rect x="75" y="10" width="15" height="15" fill="#fff" />
+                            <rect x="78" y="13" width="9" height="9" fill="#000" />
+
+                            <rect x="5" y="70" width="25" height="25" fill="#D4AF37" stroke="#000" strokeWidth="2" />
+                            <rect x="10" y="75" width="15" height="15" fill="#fff" />
+                            <rect x="13" y="78" width="9" height="9" fill="#000" />
+
+                            {/* Random Grid Data Representing QR Patterns */}
+                            <rect x="35" y="5" width="5" height="15" fill="#000" />
+                            <rect x="45" y="15" width="15" height="5" fill="#000" />
+                            <rect x="35" y="25" width="10" height="10" fill="#000" />
+                            
+                            <rect x="5" y="35" width="15" height="5" fill="#000" />
+                            <rect x="15" y="45" width="10" height="15" fill="#000" />
+                            <rect x="5" y="60" width="5" height="5" fill="#000" />
+
+                            <rect x="35" y="45" width="30" height="5" fill="#000" />
+                            <rect x="45" y="55" width="5" height="15" fill="#000" />
+                            <rect x="35" y="75" width="15" height="10" fill="#000" />
+
+                            <rect x="75" y="35" width="20" height="5" fill="#000" />
+                            <rect x="70" y="45" width="10" height="15" fill="#000" />
+                            <rect x="85" y="65" width="10" height="10" fill="#000" />
+                            <rect x="70" y="80" width="15" height="15" fill="#000" />
+                            
+                            {/* Central Small Logo */}
+                            <circle cx="50" cy="50" r="10" fill="#000" stroke="#D4AF37" strokeWidth="1.5" />
+                            <text x="50" y="53" fontSize="8" fontWeight="bold" fill="#D4AF37" textAnchor="middle">D</text>
+                          </svg>
+                        )}
+                      </div>
+                      <span className="qr-id-label">UPI ID: {upiSettings.upi_id}</span>
+                    </div>
+
+                    {/* Simulation Button */}
+                    <button 
+                      type="button" 
+                      className="btn btn-gold simulate-scan-btn"
+                      onClick={handleUpiScanMock}
+                    >
+                      SIMULATE MOBILE SCAN SUCCESSFUL
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

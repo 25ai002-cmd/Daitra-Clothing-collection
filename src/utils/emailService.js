@@ -97,6 +97,16 @@ async function directBrevoSend(order, recipientType) {
     };
   }
 
+  const isOnline = order.paymentType !== 'Cash on Delivery (COD)' && order.paymentType !== 'cod';
+
+  const targetEmail = recipientType === 'customer' 
+    ? order.customerInfo.email
+    : OWNER_EMAIL;
+
+  const targetName = recipientType === 'customer'
+    ? order.customerInfo.name
+    : 'DAITRA Owner';
+
   const isCompleted = recipientType === 'customer' && order.status === 4;
 
   const subject = isCompleted
