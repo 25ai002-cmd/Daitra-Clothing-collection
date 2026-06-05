@@ -35,6 +35,7 @@ export default function BoutiqueAdmin() {
     originalPrice: '',
     image: '',
     additionalImages: '',
+    video: '',
     description: '',
     material: '',
     fabric: '',
@@ -189,6 +190,46 @@ export default function BoutiqueAdmin() {
   };
 
   // Add Product Dress
+  const handleFileRead = (e, fieldName) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewProd(prev => ({
+        ...prev,
+        [fieldName]: reader.result
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleMultipleFilesRead = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    let loadedCount = 0;
+    const loadedUrls = [];
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        loadedUrls.push(reader.result);
+        loadedCount++;
+        if (loadedCount === files.length) {
+          setNewProd(prev => {
+            const current = prev.additionalImages ? prev.additionalImages + ', ' : '';
+            return {
+              ...prev,
+              additionalImages: current + loadedUrls.join(', ')
+            };
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     if (!newProd.title.trim() || !newProd.price || !newProd.category || !newProd.image.trim()) {
@@ -215,6 +256,7 @@ export default function BoutiqueAdmin() {
       reviewsCount: 1,
       image: newProd.image.trim(),
       images: imagesArray,
+      video: newProd.video.trim() || null,
       description: newProd.description.trim() || 'A beautiful handcrafted garment by DAITRA designer boutique.',
       material: newProd.material.trim() || 'Handcrafted from fine quality traditional handloom fabric.',
       details: [
@@ -238,6 +280,7 @@ export default function BoutiqueAdmin() {
       originalPrice: '',
       image: '',
       additionalImages: '',
+      video: '',
       description: '',
       material: '',
       fabric: '',
@@ -775,9 +818,26 @@ export default function BoutiqueAdmin() {
                     type="text"
                     value={newProd.image}
                     onChange={(e) => setNewProd(prev => ({ ...prev, image: e.target.value }))}
-                    placeholder="e.g. /assets/banner_festive.png"
+                    placeholder="e.g. /assets/banner_festive.png or paste remote URL"
                     required
                   />
+                  <div className="file-upload-row" style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <label className="btn btn-dark" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem', margin: 0, textTransform: 'none', letterSpacing: '0.5px' }}>
+                      Choose Local Photo File...
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => handleFileRead(e, 'image')} 
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                    {newProd.image && (
+                      <div className="admin-photo-preview" style={{ position: 'relative', width: '40px', height: '40px', border: '1px solid var(--border-color)' }}>
+                        <img src={newProd.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button type="button" onClick={() => setNewProd(prev => ({ ...prev, image: '' }))} style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: '14px', height: '14px', fontSize: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>&times;</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -788,6 +848,50 @@ export default function BoutiqueAdmin() {
                     onChange={(e) => setNewProd(prev => ({ ...prev, additionalImages: e.target.value }))}
                     placeholder="e.g. /assets/aarya_back.png, /assets/aarya_side.png"
                   />
+                  <div className="file-upload-row" style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <label className="btn btn-dark" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem', margin: 0, textTransform: 'none', letterSpacing: '0.5px' }}>
+                      Add Local Angle Files...
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        multiple
+                        onChange={handleMultipleFilesRead} 
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                    {newProd.additionalImages && (
+                      <span className="helper-text-label" style={{ color: 'var(--primary-gold)', fontSize: '0.7rem' }}>
+                        {newProd.additionalImages.split(',').length} files added.
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Dress Video URL / Upload File</label>
+                  <input
+                    type="text"
+                    value={newProd.video}
+                    onChange={(e) => setNewProd(prev => ({ ...prev, video: e.target.value }))}
+                    placeholder="e.g. https://www.w3schools.com/html/mov_bbb.mp4"
+                  />
+                  <div className="file-upload-row" style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <label className="btn btn-dark" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem', margin: 0, textTransform: 'none', letterSpacing: '0.5px' }}>
+                      Choose Local Video File...
+                      <input 
+                        type="file" 
+                        accept="video/*" 
+                        onChange={(e) => handleFileRead(e, 'video')} 
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                    {newProd.video && (
+                      <div className="admin-photo-preview" style={{ position: 'relative', width: '40px', height: '40px', border: '1px solid var(--border-color)' }}>
+                        <video src={newProd.video} muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <button type="button" onClick={() => setNewProd(prev => ({ ...prev, video: '' }))} style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: '14px', height: '14px', fontSize: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>&times;</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="form-group">

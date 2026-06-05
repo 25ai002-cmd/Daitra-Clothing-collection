@@ -6555,6 +6555,49 @@ main {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Gallery Navigation Arrows */
+.gallery-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: var(--text-white);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: var(--transition-fast);
+}
+
+.gallery-nav-btn:hover {
+  background-color: rgba(0, 0, 0, 0.85);
+  color: var(--primary-gold);
+  border-color: var(--primary-gold);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.gallery-nav-left {
+  left: 20px;
+}
+
+.gallery-nav-right {
+  right: 20px;
+}
+
+.video-thumbnail-placeholder {
+  transition: var(--transition-fast);
+}
+
+.video-thumbnail-placeholder:hover {
+  background-color: #1a1a1a !important;
+}
+
 
 
 

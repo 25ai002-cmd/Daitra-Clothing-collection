@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { X, Heart, Star, Shield, RefreshCw, Truck, Check, AlertCircle } from 'lucide-react';
+import { X, Heart, Star, Shield, RefreshCw, Truck, Check, AlertCircle, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { db } from '../utils/db';
+
+const isVideo = (url) => {
+  if (!url) return false;
+  if (url.startsWith('data:video/')) return true;
+  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.m4v'];
+  return videoExtensions.some(ext => url.toLowerCase().split('?')[0].endsWith(ext));
+};
 
 export default function ProductDetailModal({
   product,
@@ -40,6 +47,10 @@ export default function ProductDetailModal({
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
   const imagesList = product.images && product.images.length > 0 ? product.images : [product.image];
+  const mediaList = [...imagesList];
+  if (product.video && !mediaList.includes(product.video)) {
+    mediaList.push(product.video);
+  }
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -133,20 +144,65 @@ export default function ProductDetailModal({
           {/* Left: Product Images Gallery */}
           <div className="modal-image-gallery">
             <div className="main-image-wrapper">
-              <img src={imagesList[activeImgIndex]} alt={product.title} className="modal-main-img" />
+              {isVideo(mediaList[activeImgIndex]) ? (
+                <video 
+                  src={mediaList[activeImgIndex]} 
+                  controls 
+                  autoPlay 
+                  muted 
+                  loop 
+                  className="modal-main-img" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <img src={mediaList[activeImgIndex]} alt={product.title} className="modal-main-img" />
+              )}
               {product.tags && product.tags.length > 0 && (
                 <div className="modal-badge">{product.tags[0]}</div>
               )}
+              
+              {/* Navigation Arrows */}
+              {mediaList.length > 1 && (
+                <>
+                  <button 
+                    className="gallery-nav-btn gallery-nav-left" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImgIndex((activeImgIndex - 1 + mediaList.length) % mediaList.length);
+                    }}
+                    title="Previous media"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button 
+                    className="gallery-nav-btn gallery-nav-right" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImgIndex((activeImgIndex + 1) % mediaList.length);
+                    }}
+                    title="Next media"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              )}
             </div>
-            {imagesList.length > 1 && (
+            {mediaList.length > 1 && (
               <div className="thumbnail-row">
-                {imagesList.map((imgUrl, idx) => (
+                {mediaList.map((mediaUrl, idx) => (
                   <button
                     key={idx}
                     className={`thumbnail-btn ${activeImgIndex === idx ? 'active' : ''}`}
                     onClick={() => setActiveImgIndex(idx)}
+                    style={{ position: 'relative' }}
                   >
-                    <img src={imgUrl} alt={`${product.title} view ${idx + 1}`} />
+                    {isVideo(mediaUrl) ? (
+                      <div className="video-thumbnail-placeholder" style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', color: 'var(--primary-gold)' }}>
+                        <Play size={20} fill="var(--primary-gold)" />
+                      </div>
+                    ) : (
+                      <img src={mediaUrl} alt={`${product.title} view ${idx + 1}`} />
+                    )}
                   </button>
                 ))}
               </div>
