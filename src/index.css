@@ -6461,6 +6461,100 @@ main {
   box-shadow: 0 0 0 1.5px var(--primary-gold);
 }
 
+/* ==========================================
+   INTERACTIVE GALLERY & DRESS REVIEWS STYLE
+   ========================================== */
+
+.thumbnail-row {
+  display: flex;
+  gap: 10px;
+  padding: 15px;
+  justify-content: center;
+  background-color: #131313;
+  border-top: 1px solid var(--border-color);
+}
+
+.thumbnail-btn {
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+  transition: var(--transition-fast);
+}
+
+.thumbnail-btn:hover,
+.thumbnail-btn.active {
+  border-color: var(--primary-gold);
+  transform: scale(1.05);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+.thumbnail-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-material-section {
+  background-color: rgba(212, 175, 55, 0.04);
+  border-left: 2px solid var(--primary-gold);
+  padding: 14px 18px;
+  margin: 15px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.material-desc-text {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #e0e0e0;
+  margin-top: 4px;
+}
+
+.modal-reviews-container {
+  border-top: 1px solid var(--border-color);
+  background-color: #0a0a0a;
+  padding: 40px;
+}
+
+.modal-reviews-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 1.5px solid var(--primary-gold);
+  padding-bottom: 12px;
+}
+
+.modal-reviews-header h3 {
+  font-family: var(--font-accent);
+  color: var(--primary-gold);
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
+.modal-write-review-form {
+  background-color: #111111;
+  border: 1px solid var(--border-color);
+  padding: 25px;
+  margin-bottom: 30px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 
 
 

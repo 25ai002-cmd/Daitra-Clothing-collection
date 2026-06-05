@@ -6,6 +6,7 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const isCloudEnabled = SUPABASE_URL && SUPABASE_ANON_KEY;
 
 const SEED_REVIEWS = [
+  // Store Testimonials
   {
     id: 1,
     name: "Prit Shah",
@@ -13,7 +14,8 @@ const SEED_REVIEWS = [
     date: "a week ago",
     comment: "Must visit",
     ownerReply: "THANK YOU PLS VISIT AGAIN",
-    verified: true
+    verified: true,
+    productId: null
   },
   {
     id: 2,
@@ -22,7 +24,8 @@ const SEED_REVIEWS = [
     date: "2 weeks ago",
     comment: "Excellent Collection. Must Visit.",
     ownerReply: "Thank you for shopping from DAITRA hope visit again",
-    verified: true
+    verified: true,
+    productId: null
   },
   {
     id: 3,
@@ -31,7 +34,8 @@ const SEED_REVIEWS = [
     date: "2 weeks ago",
     comment: "I like the dresses",
     ownerReply: null,
-    verified: true
+    verified: true,
+    productId: null
   },
   {
     id: 4,
@@ -40,7 +44,8 @@ const SEED_REVIEWS = [
     date: "20 days ago",
     comment: "Unique collection and the response of staff is very nice.",
     ownerReply: "Thank you so much Priyal! We look forward to serving you again.",
-    verified: true
+    verified: true,
+    productId: null
   },
   {
     id: 5,
@@ -49,6 +54,58 @@ const SEED_REVIEWS = [
     date: "1 month ago",
     comment: "The material quality, variety, and presentation were excellent.",
     ownerReply: "We appreciate your kind feedback Kunjal! It inspires us.",
+    verified: true,
+    productId: null
+  },
+  // Dress Specific Reviews
+  {
+    id: 101,
+    productId: 1,
+    name: "Meera Vyas",
+    rating: 5,
+    date: "3 days ago",
+    comment: "Absolutely gorgeous dress! The pure silk has a very rich sheen and the embroidery is extremely neat. Worth every rupee.",
+    ownerReply: "Thank you Meera! We are thrilled that you loved the Aarya set.",
+    verified: true
+  },
+  {
+    id: 102,
+    productId: 1,
+    name: "Kavita Shah",
+    rating: 4,
+    date: "1 week ago",
+    comment: "Stunning color and fit is perfect. The organza dupatta is a bit stiff initially but gets soft after dry clean. Very premium.",
+    ownerReply: null,
+    verified: true
+  },
+  {
+    id: 103,
+    productId: 2,
+    name: "Deepal Patel",
+    rating: 5,
+    date: "5 days ago",
+    comment: "Very breathable and soft organic cotton. The hand block print indigo doesn't bleed. Ideal for daily designer wear.",
+    ownerReply: "Thank you for the wonderful feedback, Deepal!",
+    verified: true
+  },
+  {
+    id: 104,
+    productId: 5,
+    name: "Shreya Joshi",
+    rating: 5,
+    date: "2 days ago",
+    comment: "This Anarkali gown has an incredible flare! The micro-georgette is light and bouncy. Lined with shantoon which makes it very comfortable.",
+    ownerReply: "Thank you Shreya! The 5m flare is indeed designed to make you feel like royalty.",
+    verified: true
+  },
+  {
+    id: 105,
+    productId: 8,
+    name: "Radhika Iyer",
+    rating: 5,
+    date: "4 days ago",
+    comment: "Royal velvet fabric feels so heavy and premium. Neck zardozi is very intricate. Got so many compliments at a winter wedding!",
+    ownerReply: "We are delighted to hear this, Radhika!",
     verified: true
   }
 ];
@@ -101,11 +158,14 @@ export const db = {
     // LocalStorage Fallback
     const saved = localStorage.getItem('daitra_db_products');
     if (saved) {
-      return JSON.parse(saved);
-    } else {
-      localStorage.setItem('daitra_db_products', JSON.stringify(seedProducts));
-      return seedProducts;
+      const parsed = JSON.parse(saved);
+      // Migration: Ensure the stored products have the new 'material' field
+      if (parsed.length > 0 && parsed[0].material) {
+        return parsed;
+      }
     }
+    localStorage.setItem('daitra_db_products', JSON.stringify(seedProducts));
+    return seedProducts;
   },
 
   async saveProduct(product) {
@@ -369,11 +429,14 @@ export const db = {
     // LocalStorage Fallback
     const saved = localStorage.getItem('daitra_reviews');
     if (saved) {
-      return JSON.parse(saved);
-    } else {
-      localStorage.setItem('daitra_reviews', JSON.stringify(SEED_REVIEWS));
-      return SEED_REVIEWS;
+      const parsed = JSON.parse(saved);
+      // Migration: Verify we have loaded the product-specific reviews
+      if (parsed.some(r => r.id === 101)) {
+        return parsed;
+      }
     }
+    localStorage.setItem('daitra_reviews', JSON.stringify(SEED_REVIEWS));
+    return SEED_REVIEWS;
   },
 
   async saveReview(review) {

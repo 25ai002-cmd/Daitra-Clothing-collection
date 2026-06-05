@@ -12,7 +12,7 @@ export default function ReviewPortal() {
   useEffect(() => {
     const loadReviews = async () => {
       const data = await db.getReviews();
-      setReviews(data);
+      setReviews(data.filter(r => !r.productId));
     };
     loadReviews();
   }, []);
@@ -36,12 +36,13 @@ export default function ReviewPortal() {
       date: "Just now",
       comment: newReview.comment,
       ownerReply: null,
-      verified: false
+      verified: false,
+      productId: null
     };
 
     await db.saveReview(reviewObject);
     const updatedReviews = await db.getReviews();
-    setReviews(updatedReviews);
+    setReviews(updatedReviews.filter(r => !r.productId));
 
     setNewReview({ name: '', rating: 5, comment: '' });
     setSuccessMsg('Thank you! Your review has been added successfully.');

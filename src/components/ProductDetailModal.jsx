@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { X, Heart, Star, Shield, RefreshCw, Truck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Heart, Star, Shield, RefreshCw, Truck, Check, AlertCircle } from 'lucide-react';
+import { db } from '../utils/db';
 
 export default function ProductDetailModal({
   product,
@@ -11,10 +12,34 @@ export default function ProductDetailModal({
   const [selectedSize, setSelectedSize] = useState('');
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [activeImgIndex, setActiveImgIndex] = useState(0);
+
+  // Reviews states
+  const [reviews, setReviews] = useState([]);
+  const [writeMode, setWriteMode] = useState(false);
+  const [newReview, setNewReview] = useState({ name: '', rating: 5, comment: '' });
+  const [successMsg, setSuccessMsg] = useState('');
+  const [validationError, setValidationError] = useState('');
+
+  useEffect(() => {
+    if (!product) return;
+    
+    const loadReviews = async () => {
+      const allReviews = await db.getReviews();
+      setReviews(allReviews.filter(r => r.productId === product.id));
+    };
+    
+    loadReviews();
+    setActiveImgIndex(0); // Reset index on product change
+    setSelectedSize('');
+    setErrorMsg('');
+  }, [product?.id]);
 
   if (!product) return null;
 
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+
+  const imagesList = product.images && product.images.length > 0 ? product.images : [product.image];
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -36,6 +61,66 @@ export default function ProductDetailModal({
     onClose();
   };
 
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!newReview.name.trim() || !newReview.comment.trim()) {
+      setValidationError('Please fill in both name and review comment.');
+      return;
+    }
+    setValidationError('');
+
+    const reviewObject = {
+      id: Date.now(),
+      productId: product.id,
+      name: newReview.name,
+      rating: newReview.rating,
+      date: "Just now",
+      comment: newReview.comment,
+      ownerReply: null,
+      verified: true
+    };
+
+    await db.saveReview(reviewObject);
+    const allReviews = await db.getReviews();
+    const productReviews = allReviews.filter(r => r.productId === product.id);
+    setReviews(productReviews);
+
+    // Sync product reviewsCount and rating back to catalogs in localStorage
+    const newReviewsCount = productReviews.length;
+    const newAverageRating = Number((productReviews.reduce((sum, r) => sum + r.rating, 0) / newReviewsCount).toFixed(1));
+
+    const savedProds = localStorage.getItem('daitra_db_products');
+    if (savedProds) {
+      const parsed = JSON.parse(savedProds);
+      const pIdx = parsed.findIndex(p => p.id === product.id);
+      if (pIdx > -1) {
+        parsed[pIdx].reviewsCount = newReviewsCount;
+        parsed[pIdx].rating = newAverageRating;
+        localStorage.setItem('daitra_db_products', JSON.stringify(parsed));
+      }
+    }
+
+    // Update in-memory references and fire update event
+    product.reviewsCount = newReviewsCount;
+    product.rating = newAverageRating;
+    window.dispatchEvent(new Event('daitra_catalog_updated'));
+
+    setNewReview({ name: '', rating: 5, comment: '' });
+    setSuccessMsg('Thank you! Your product review has been submitted.');
+    setWriteMode(false);
+    
+    setTimeout(() => {
+      setSuccessMsg('');
+    }, 4000);
+  };
+
+  // Calculations for dynamic average
+  const calculatedRating = reviews.length > 0
+    ? Number((reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1))
+    : product.rating;
+
+  const calculatedCount = reviews.length > 0 ? reviews.length : product.reviewsCount;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
@@ -45,14 +130,27 @@ export default function ProductDetailModal({
         </button>
 
         <div className="modal-content-grid">
-          {/* Left: Product Images */}
+          {/* Left: Product Images Gallery */}
           <div className="modal-image-gallery">
             <div className="main-image-wrapper">
-              <img src={product.image} alt={product.title} className="modal-main-img" />
+              <img src={imagesList[activeImgIndex]} alt={product.title} className="modal-main-img" />
               {product.tags && product.tags.length > 0 && (
                 <div className="modal-badge">{product.tags[0]}</div>
               )}
             </div>
+            {imagesList.length > 1 && (
+              <div className="thumbnail-row">
+                {imagesList.map((imgUrl, idx) => (
+                  <button
+                    key={idx}
+                    className={`thumbnail-btn ${activeImgIndex === idx ? 'active' : ''}`}
+                    onClick={() => setActiveImgIndex(idx)}
+                  >
+                    <img src={imgUrl} alt={`${product.title} view ${idx + 1}`} />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right: Product Details */}
@@ -66,13 +164,13 @@ export default function ProductDetailModal({
                   <Star 
                     key={i} 
                     size={16} 
-                    fill={i < Math.floor(product.rating) ? "var(--primary-gold)" : "transparent"} 
+                    fill={i < Math.floor(calculatedRating) ? "var(--primary-gold)" : "transparent"} 
                     stroke="var(--primary-gold)" 
                   />
                 ))}
               </div>
-              <span className="rating-text">{product.rating.toFixed(1)}</span>
-              <span className="reviews-link">({product.reviewsCount} verified reviews)</span>
+              <span className="rating-text">{calculatedRating.toFixed(1)}</span>
+              <span className="reviews-link">({calculatedCount} verified reviews)</span>
             </div>
 
             <div className="modal-price-row">
@@ -86,6 +184,14 @@ export default function ProductDetailModal({
             </div>
 
             <p className="modal-description">{product.description}</p>
+
+            {/* Material & Fabric description */}
+            {product.material && (
+              <div className="modal-material-section">
+                <span className="section-label">Material & Fabric</span>
+                <p className="material-desc-text">{product.material}</p>
+              </div>
+            )}
 
             {/* Size Selector */}
             <div className="modal-size-section">
@@ -155,6 +261,130 @@ export default function ProductDetailModal({
                 <span>100% Quality Assured</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Dress Reviews Portal */}
+        <div className="modal-reviews-container">
+          <div className="modal-reviews-header">
+            <h3>Customer Reviews ({calculatedCount})</h3>
+            {!writeMode ? (
+              <button className="btn btn-gold btn-sm" onClick={() => setWriteMode(true)}>
+                WRITE A REVIEW
+              </button>
+            ) : (
+              <button className="btn btn-dark btn-sm" onClick={() => setWriteMode(false)}>
+                CANCEL
+              </button>
+            )}
+          </div>
+
+          {successMsg && (
+            <div className="review-success-alert" style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary-gold-light)' }}>
+              <Check size={18} />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {writeMode && (
+            <form className="modal-write-review-form" onSubmit={handleReviewSubmit}>
+              <h4 style={{ color: 'var(--primary-gold)', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.9rem' }}>Share Your Feedback</h4>
+              
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Your Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Sonal Vyas"
+                  value={newReview.name}
+                  onChange={(e) => setNewReview(prev => ({ ...prev, name: e.target.value }))}
+                  required
+                  style={{ width: '100%', padding: '10px', backgroundColor: '#161616', border: '1px solid var(--border-color)', color: '#fff' }}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Rating</label>
+                <div className="rating-selector-stars" style={{ display: 'flex', gap: '8px' }}>
+                  {[1, 2, 3, 4, 5].map((starNum) => (
+                    <button
+                      key={starNum}
+                      type="button"
+                      onClick={() => setNewReview(prev => ({ ...prev, rating: starNum }))}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    >
+                      <Star
+                        size={22}
+                        fill={newReview.rating >= starNum ? "var(--primary-gold)" : "transparent"}
+                        stroke="var(--primary-gold)"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Comment</label>
+                <textarea
+                  placeholder="Write details about fabric, material feel, size fit, and look..."
+                  rows="3"
+                  value={newReview.comment}
+                  onChange={(e) => setNewReview(prev => ({ ...prev, comment: e.target.value }))}
+                  required
+                  style={{ width: '100%', padding: '10px', backgroundColor: '#161616', border: '1px solid var(--border-color)', color: '#fff', resize: 'vertical' }}
+                />
+              </div>
+
+              {validationError && (
+                <div className="review-validation-error-card" style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-red)' }}>
+                  <AlertCircle size={16} />
+                  <span>{validationError}</span>
+                </div>
+              )}
+
+              <button type="submit" className="btn btn-gold" style={{ padding: '8px 18px', fontSize: '0.8rem' }}>
+                SUBMIT FEEDBACK
+              </button>
+            </form>
+          )}
+
+          <div className="modal-reviews-list" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {reviews.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.85rem' }}>No reviews yet for this dress. Be the first to share your feedback!</p>
+            ) : (
+              reviews.map((rev) => (
+                <div key={rev.id} className="review-card" style={{ padding: '20px', border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)' }}>
+                  <div className="review-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="reviewer-avatar" style={{ width: '36px', height: '36px', fontSize: '0.95rem', borderRadius: '50%', backgroundColor: 'var(--border-color)', color: 'var(--primary-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--primary-gold)' }}>
+                      {rev.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="reviewer-info">
+                      <div className="reviewer-name-row" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h4 style={{ fontSize: '0.85rem', margin: 0, fontWeight: 600, color: 'var(--text-white)' }}>{rev.name}</h4>
+                        {rev.verified && <span className="verified-badge" style={{ fontSize: '0.55rem', padding: '2px 6px', color: 'var(--primary-gold)', backgroundColor: 'rgba(212, 175, 55, 0.1)' }}>Verified Buyer</span>}
+                      </div>
+                      <div className="review-meta-row" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <div className="stars-small" style={{ display: 'flex', gap: '2px' }}>
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} size={12} fill={i < rev.rating ? "var(--primary-gold)" : "transparent"} stroke="var(--primary-gold)" />
+                          ))}
+                        </div>
+                        <span className="review-date" style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{rev.date}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="review-comment" style={{ fontSize: '0.85rem', marginTop: '8px', color: '#d3d3d3', fontStyle: 'italic', margin: '8px 0 0 0' }}>"{rev.comment}"</p>
+                  
+                  {rev.ownerReply && (
+                    <div className="owner-reply-box" style={{ padding: '12px', marginTop: '10px', backgroundColor: '#161616', borderLeft: '2px solid var(--primary-gold)' }}>
+                      <div className="reply-header" style={{ fontSize: '0.7rem', display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
+                        <strong style={{ color: 'var(--primary-gold)' }}>Response from the owner</strong>
+                      </div>
+                      <p style={{ fontSize: '0.8rem', marginTop: '4px', color: 'var(--text-white)', margin: '4px 0 0 0' }}>"{rev.ownerReply}"</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

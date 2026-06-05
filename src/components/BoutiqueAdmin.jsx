@@ -34,7 +34,9 @@ export default function BoutiqueAdmin() {
     price: '',
     originalPrice: '',
     image: '',
+    additionalImages: '',
     description: '',
+    material: '',
     fabric: '',
     work: '',
     style: '',
@@ -198,6 +200,11 @@ export default function BoutiqueAdmin() {
     const priceNum = parseFloat(newProd.price);
     const origPriceNum = newProd.originalPrice ? parseFloat(newProd.originalPrice) : Math.round(priceNum * 1.3);
 
+    const additionalImgs = newProd.additionalImages
+      ? newProd.additionalImages.split(',').map(url => url.trim()).filter(Boolean)
+      : [];
+    const imagesArray = [newProd.image.trim(), ...additionalImgs];
+
     const productObj = {
       id: Date.now(),
       title: newProd.title.trim(),
@@ -207,8 +214,9 @@ export default function BoutiqueAdmin() {
       rating: 5.0,
       reviewsCount: 1,
       image: newProd.image.trim(),
-      images: [newProd.image.trim()],
+      images: imagesArray,
       description: newProd.description.trim() || 'A beautiful handcrafted garment by DAITRA designer boutique.',
+      material: newProd.material.trim() || 'Handcrafted from fine quality traditional handloom fabric.',
       details: [
         `Fabric: ${newProd.fabric.trim() || 'Premium Handloom Blend'}`,
         `Work: ${newProd.work.trim() || 'Traditional Artisanal Craft'}`,
@@ -229,7 +237,9 @@ export default function BoutiqueAdmin() {
       price: '',
       originalPrice: '',
       image: '',
+      additionalImages: '',
       description: '',
+      material: '',
       fabric: '',
       work: '',
       style: '',
@@ -760,13 +770,23 @@ export default function BoutiqueAdmin() {
                 </div>
 
                 <div className="form-group">
-                  <label>Dress Photo / Image URL</label>
+                  <label>Primary Dress Photo URL</label>
                   <input
                     type="text"
                     value={newProd.image}
                     onChange={(e) => setNewProd(prev => ({ ...prev, image: e.target.value }))}
-                    placeholder="e.g. https://images.unsplash.com/... or /assets/banner_festive.png"
+                    placeholder="e.g. /assets/banner_festive.png"
                     required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Additional Angle Photos (Comma-separated URLs)</label>
+                  <input
+                    type="text"
+                    value={newProd.additionalImages}
+                    onChange={(e) => setNewProd(prev => ({ ...prev, additionalImages: e.target.value }))}
+                    placeholder="e.g. /assets/aarya_back.png, /assets/aarya_side.png"
                   />
                 </div>
 
@@ -776,7 +796,17 @@ export default function BoutiqueAdmin() {
                     value={newProd.description}
                     onChange={(e) => setNewProd(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Describe the fabric look, aesthetics, and fit design..."
-                    rows="3"
+                    rows="2"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Material & Fabric Description</label>
+                  <textarea
+                    value={newProd.material}
+                    onChange={(e) => setNewProd(prev => ({ ...prev, material: e.target.value }))}
+                    placeholder="e.g. Crafted from 100% premium silk-blend for luxury comfort..."
+                    rows="2"
                   />
                 </div>
               </div>
