@@ -6723,6 +6723,82 @@ main {
   background-color: #1a1a1a !important;
 }
 
+/* Responsive overrides for mobile screens (max-width: 768px) */
+@media (max-width: 768px) {
+  /* Gallery Arrows responsive scaling */
+  .gallery-nav-btn {
+    width: 34px !important;
+    height: 34px !important;
+    background-color: rgba(0, 0, 0, 0.65) !important;
+  }
+  .gallery-nav-left {
+    left: 8px !important;
+  }
+  .gallery-nav-right {
+    right: 8px !important;
+  }
+  .gallery-nav-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  /* Product Modal Reviews Container padding clean up */
+  .modal-reviews-container {
+    padding: 24px 16px !important;
+  }
+  .modal-write-review-form {
+    padding: 16px !important;
+  }
+
+  /* Payment Gateway layout spacing adjustments */
+  .gateway-header {
+    padding: 12px 16px !important;
+  }
+  .gateway-invoice-row {
+    padding: 10px 16px !important;
+  }
+  .gateway-content-area {
+    padding: 16px !important;
+  }
+  .gateway-modal .form-grid {
+    grid-template-columns: 1fr 1fr !important; /* Keep Expiry & CVV side-by-side */
+    gap: 12px !important;
+  }
+}
+
+/* Responsive overrides for narrow screens (max-width: 480px) */
+@media (max-width: 480px) {
+  /* Stacking the UPI ID input group vertically on small screens */
+  .upi-input-group {
+    flex-direction: column !important;
+    border: none !important;
+    background: transparent !important;
+    gap: 8px !important;
+  }
+  .upi-vpa-input {
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    width: 100% !important;
+    font-size: 0.85rem !important;
+  }
+  .upi-handle-select {
+    border: 1px solid var(--border-color) !important;
+    border-radius: 4px !important;
+    padding: 10px !important;
+    width: 100% !important;
+    height: 40px !important;
+    font-size: 0.8rem !important;
+  }
+  .upi-quick-handles {
+    margin-top: 4px !important;
+  }
+  .quick-handle-tag {
+    font-size: 0.7rem !important;
+    padding: 5px 10px !important;
+  }
+}
+
 
 
 
