@@ -73,8 +73,8 @@ export default function OrderTracker({ user }) {
             setOrderIdInput(found.orderId);
             setErrorMsg('');
             
-            // Check for cancel parameter
-            const shouldCancel = hash.includes('cancel=true');
+            // Check for cancel parameter (only allowed if order is placed/processing)
+            const shouldCancel = hash.includes('cancel=true') && found.status <= 1;
             setCancelConfirm(shouldCancel);
             setCancelDone(false);
           } else {
@@ -139,7 +139,7 @@ export default function OrderTracker({ user }) {
   };
 
   const handleCancelOrder = async () => {
-    if (!searchedOrder) return;
+    if (!searchedOrder || searchedOrder.status > 1) return;
     const CANCELLED_STATUS = 5;
     await db.updateOrderStatus(searchedOrder.orderId, CANCELLED_STATUS);
     const cancelled = { ...searchedOrder, status: CANCELLED_STATUS };

@@ -52,9 +52,13 @@ app.post('/api/send-email', async (req, res) => {
       ? order.customerInfo.name
       : 'DAITRA Owner';
 
-    const subject = recipientType === 'customer'
-      ? `🎉 ORDER CONFIRMED — ID: ${order.orderId} (DAITRA Couture)`
-      : `🔔 NEW ORDER CAPTURED — ID: ${order.orderId} (${isOnline ? 'Online' : 'COD'})`;
+    const isCompleted = recipientType === 'customer' && order.status === 4;
+
+    const subject = isCompleted
+      ? `🎉 ORDER COMPLETED — ID: ${order.orderId} (DAITRA Couture)`
+      : (recipientType === 'customer'
+        ? `🎉 ORDER CONFIRMED — ID: ${order.orderId} (DAITRA Couture)`
+        : `🔔 NEW ORDER CAPTURED — ID: ${order.orderId} (${isOnline ? 'Online' : 'COD'})`);
 
     // Dynamic website origin for absolute image and page routing URLs
     const origin = req.headers.origin || req.headers.referer || `http://localhost:${PORT}`;
@@ -84,15 +88,20 @@ app.post('/api/send-email', async (req, res) => {
       `;
     }).join('');
 
-    const introHtml = recipientType === 'customer'
+    const introHtml = isCompleted
       ? `
-        <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Thank you for shopping at DAITRA, ${order.customerInfo.name}!</h2>
-        <p style="font-size: 14px; line-height: 1.6; color: #555555;">We are thrilled to confirm your order. Our boutique artisans in Ahmedabad are already preparing your traditional garments with the utmost care. Below are your order details and delivery invoice.</p>
+        <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Your order is completed, ${order.customerInfo.name}!</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #555555;">Thank you for shopping at DAITRA Couture! We are pleased to confirm that your order has been successfully delivered and completed. We hope you absolutely love your handcrafted traditional outfit. Below is the final summary invoice of your purchase.</p>
       `
-      : `
-        <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Hello DAITRA Owner,</h2>
-        <p style="font-size: 14px; line-height: 1.6; color: #555555;">You have received a new customer order on your website dashboard. Below are the order receipt and payment parameters for fulfillment.</p>
-      `;
+      : (recipientType === 'customer'
+        ? `
+          <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Thank you for shopping at DAITRA, ${order.customerInfo.name}!</h2>
+          <p style="font-size: 14px; line-height: 1.6; color: #555555;">We are thrilled to confirm your order. Our boutique artisans in Ahmedabad are already preparing your traditional garments with the utmost care. Below are your order details and delivery invoice.</p>
+        `
+        : `
+          <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Hello DAITRA Owner,</h2>
+          <p style="font-size: 14px; line-height: 1.6; color: #555555;">You have received a new customer order on your website dashboard. Below are the order receipt and payment parameters for fulfillment.</p>
+        `);
 
     const ctaHtml = recipientType === 'customer'
       ? `
@@ -101,9 +110,11 @@ app.post('/api/send-email', async (req, res) => {
           <a href="${websiteUrl}#/track/${order.orderId}" style="display: inline-block; padding: 12px 24px; border-radius: 4px; font-size: 14px; font-weight: bold; background-color: #0b0b0b; border: 1.5px solid #D4AF37; color: #D4AF37; text-decoration: none; margin: 5px; text-transform: uppercase; letter-spacing: 1px;">
             Track Order Details
           </a>
-          <a href="${websiteUrl}#/track/${order.orderId}?cancel=true" style="display: inline-block; padding: 12px 24px; border-radius: 4px; font-size: 14px; font-weight: bold; background-color: #721c24; border: 1.5px solid #f5c6cb; color: #f8d7da; text-decoration: none; margin: 5px; text-transform: uppercase; letter-spacing: 1px;">
-            Cancel Order
-          </a>
+          ${order.status < 4 ? `
+            <a href="${websiteUrl}#/track/${order.orderId}?cancel=true" style="display: inline-block; padding: 12px 24px; border-radius: 4px; font-size: 14px; font-weight: bold; background-color: #721c24; border: 1.5px solid #f5c6cb; color: #f8d7da; text-decoration: none; margin: 5px; text-transform: uppercase; letter-spacing: 1px;">
+              Cancel Order
+            </a>
+          ` : ''}
         </div>
       `
       : '';
@@ -113,7 +124,7 @@ app.post('/api/send-email', async (req, res) => {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>${recipientType === 'customer' ? 'Order Confirmation' : 'New Order Alert'}</title>
+        <title>${isCompleted ? 'Order Completed' : (recipientType === 'customer' ? 'Order Confirmation' : 'New Order Alert')}</title>
       </head>
       <body style="font-family: Arial, sans-serif; background-color: #f6f6f6; margin: 0; padding: 20px; color: #333333;">
         <div style="background-color: #ffffff; max-width: 600px; margin: 0 auto; border: 1px solid #dddddd; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
