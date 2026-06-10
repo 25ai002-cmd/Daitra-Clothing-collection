@@ -271,6 +271,63 @@ app.post('/api/send-email', async (req, res) => {
   }
 });
 
+
+// POST endpoint to process Razorpay refunds
+app.post('/api/refund', async (req, res) => {
+  try {
+    const { paymentId, amount, orderId } = req.body;
+    if (!paymentId) {
+      return res.status(400).json({ success: false, error: 'Payment ID is required.' });
+    }
+
+    const keyId = 'rzp_test_T01br2Bnh2Rgp1';
+    const keySecret = '35HVf4YzPFr5bmIXIRnDAMoc';
+    const authString = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+
+    const refundBody = {};
+    if (amount) {
+      refundBody.amount = Math.round(amount * 100); // Razorpay expects amount in paise (1 INR = 100 paise)
+    }
+    if (orderId) {
+      refundBody.notes = { order_id: orderId };
+      refundBody.receipt = `refund_${orderId}`;
+    }
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Basic ${authString}`
+    };
+
+    if (orderId) {
+      headers['X-Refund-Idempotency'] = `refund_${orderId}`;
+    }
+
+    console.log(`Initiating refund request to Razorpay for Payment ID: ${paymentId}, Order ID: ${orderId}...`);
+
+    const response = await fetch(`https://api.razorpay.com/v1/payments/${paymentId}/refund`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify(refundBody)
+    });
+
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log(`Refund successfully processed by Razorpay. Refund ID: ${data.id}`);
+      return res.status(200).json({ success: true, refund: data });
+    } else {
+      console.error('Razorpay Refund API error response:', data);
+      return res.status(response.status).json({ 
+        success: false, 
+        error: data.error?.description || 'Razorpay API returned an error' 
+      });
+    }
+  } catch (error) {
+    console.error('Server /api/refund exception:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Fallback all other GET traffic to Vite's static index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));

@@ -10,6 +10,7 @@ export default function OrderTracker({ user }) {
   const [userOrders, setUserOrders] = useState([]);
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [cancelDone, setCancelDone] = useState(false);
+  const [refundProcessing, setRefundProcessing] = useState(false);
   const detailsRef = useRef(null);
 
   // Statuses: 0=Placed, 1=Processing, 2=Dispatched, 3=Out for Delivery, 4=Delivered, 5=Cancelled
@@ -161,6 +162,42 @@ export default function OrderTracker({ user }) {
 
   const handleCancelOrder = async () => {
     if (!searchedOrder || searchedOrder.status > 1) return;
+
+    // Check if order was paid via Razorpay
+    const paymentType = searchedOrder.paymentType || '';
+    const match = paymentType.match(/pay_[A-Za-z0-9]+/);
+    const paymentId = match ? match[0] : null;
+
+    if (paymentId) {
+      setRefundProcessing(true);
+      try {
+        const response = await fetch('/api/refund', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            paymentId,
+            amount: searchedOrder.totals.finalTotal,
+            orderId: searchedOrder.orderId
+          })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success) {
+          alert(`Refund of ₹${searchedOrder.totals.finalTotal.toLocaleString('en-IN')} has been successfully initiated to your original payment method. Refund Transaction ID: ${data.refund.id}`);
+        } else {
+          console.error('Refund failed:', data.error);
+          alert(`Order cancellation proceeding, but automatic refund failed: ${data.error || 'Unknown error'}. Our support team will process it manually.`);
+        }
+      } catch (err) {
+        console.error('Refund error:', err);
+        alert('Order cancellation proceeding, but we encountered a network error while initiating the refund. Our support team will process it manually.');
+      } finally {
+        setRefundProcessing(false);
+      }
+    }
+
     const CANCELLED_STATUS = 5;
     await db.updateOrderStatus(searchedOrder.orderId, CANCELLED_STATUS);
     const cancelled = { ...searchedOrder, status: CANCELLED_STATUS };
@@ -416,13 +453,21 @@ export default function OrderTracker({ user }) {
                       <div className="cancel-confirm-box">
                         <AlertTriangle size={18} className="cancel-warn-icon" />
                         <div>
-                          <p className="cancel-confirm-title">Are you sure you want to cancel?</p>
-                          <p className="cancel-confirm-sub">This cannot be undone. The order will be marked as cancelled.</p>
+                          <p className="cancel-confirm-title">
+                            {refundProcessing ? 'Processing Refund...' : 'Are you sure you want to cancel?'}
+                          </p>
+                          <p className="cancel-confirm-sub">
+                            {refundProcessing 
+                              ? 'Please do not close this window. We are processing your automatic refund with Razorpay...'
+                              : 'This cannot be undone. The order will be marked as cancelled.'}
+                          </p>
                         </div>
-                        <div className="cancel-confirm-btns">
-                          <button className="btn btn-dark cancel-no-btn" onClick={() => setCancelConfirm(false)}>No, Keep It</button>
-                          <button className="btn cancel-yes-btn" onClick={handleCancelOrder}>Yes, Cancel</button>
-                        </div>
+                        {!refundProcessing && (
+                          <div className="cancel-confirm-btns">
+                            <button className="btn btn-dark cancel-no-btn" onClick={() => setCancelConfirm(false)}>No, Keep It</button>
+                            <button className="btn cancel-yes-btn" onClick={handleCancelOrder}>Yes, Cancel</button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
