@@ -818,7 +818,7 @@ export default function BoutiqueAdmin() {
                     type="text"
                     value={newProd.image}
                     onChange={(e) => setNewProd(prev => ({ ...prev, image: e.target.value }))}
-                    placeholder="e.g. /assets/banner_festive.png or paste remote URL"
+                    placeholder="e.g. /dresses/1.jpg or paste remote URL"
                     required
                   />
                   <div className="file-upload-row" style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>

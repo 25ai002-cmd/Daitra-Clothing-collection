@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 
 const SLIDES = [
   {
-    image: "/assets/banner_festive.png",
+    image: "/dresses/60.jpg",
     title: "Festive Splendor",
-    subtitle: "DAITRA FESTIVE EDIT 2026",
-    tagline: "Embrace the timeless beauty of hand-embroidered silks designed to make every occasion memorable.",
+    subtitle: "DAITRA COUTURE EDIT 2026",
+    tagline: "Embrace the timeless beauty of hand-embroidered silks designed to make every occasion unforgettable.",
     btnText: "Explore Kurtas & Sets",
     category: "kurtas"
   },
   {
-    image: "/assets/banner_gowns.png",
+    image: "/dresses/66.jpg",
     title: "Ethnic Grace",
     subtitle: "THE GOWNS COLLECTION",
     tagline: "Experience modern elegance in flared georgettes and weaves that sweep the floor with royal vibes.",
@@ -18,10 +18,10 @@ const SLIDES = [
     category: "gowns"
   },
   {
-    image: "/assets/banner_fusion.png",
+    image: "/dresses/20.jpg",
     title: "Modern Heritage",
     subtitle: "INDO-WESTERN FUSION",
-    tagline: "Chic coord sets and cape jackets designed for the modern woman who values tradition and comfort.",
+    tagline: "Chic coord sets designed for the modern woman who values tradition, craftsmanship, and comfort.",
     btnText: "Shop Fusion Wear",
     category: "fusion"
   }

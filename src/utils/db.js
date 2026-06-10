@@ -159,8 +159,10 @@ export const db = {
     const saved = localStorage.getItem('daitra_db_products');
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Migration: Ensure the stored products have the new 'material' field
-      if (parsed.length > 0 && parsed[0].material) {
+      // Migration v2: Re-seed if still using old /assets/ image paths (switch to /dresses/ real photos)
+      const isOldData = parsed.length > 0 && parsed[0].image && parsed[0].image.startsWith('/assets/');
+      const isCorrectCount = parsed.length >= seedProducts.length;
+      if (!isOldData && parsed.length > 0 && parsed[0].material && isCorrectCount) {
         return parsed;
       }
     }

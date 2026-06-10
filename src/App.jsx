@@ -390,7 +390,7 @@ export default function App() {
                 </button>
               </div>
               <div className="philosophy-image-box">
-                <img src="/assets/banner_festive.png" alt="Traditional Elegance" className="philosophy-img" />
+              <img src="/dresses/14.jpg" alt="Traditional Elegance" className="philosophy-img" />
               </div>
             </div>
           </section>

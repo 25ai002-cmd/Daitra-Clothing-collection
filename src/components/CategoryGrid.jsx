@@ -5,19 +5,19 @@ const CATEGORIES = [
     id: 'kurtas',
     name: "Kurtas & Sets",
     tagline: "Intricate Silks & Block Prints",
-    image: "/assets/banner_festive.png"
+    image: "/dresses/5.jpg"
   },
   {
     id: 'gowns',
     name: "Ethnic Gowns",
     tagline: "Flowing Georgettes & Glimmer",
-    image: "/assets/banner_gowns.png"
+    image: "/dresses/10.jpg"
   },
   {
     id: 'fusion',
     name: "Fusion Wear",
     tagline: "Modern Cuts meets Indian Motifs",
-    image: "/assets/banner_fusion.png"
+    image: "/dresses/20.jpg"
   }
 ];
 
