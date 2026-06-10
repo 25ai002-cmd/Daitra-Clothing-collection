@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, Calendar, Clock, Truck, CheckCircle2, ChevronRight, Package, Info, XCircle, AlertTriangle } from 'lucide-react';
 import { db } from '../utils/db';
+import { sendCustomerConfirmationEmail, sendOrderAlertEmail } from '../utils/emailService';
 
 export default function OrderTracker({ user }) {
   const [orderIdInput, setOrderIdInput] = useState('');
@@ -138,6 +139,26 @@ export default function OrderTracker({ user }) {
     }
   };
 
+  const triggerCancellationEmails = async (order) => {
+    console.log("Sending cancellation emails to owner and customer...");
+    
+    // 1. Send to Customer
+    try {
+      if (order.customerInfo.email) {
+        await sendCustomerConfirmationEmail(order);
+      }
+    } catch (e) {
+      console.error("Failed to send cancellation email to customer:", e);
+    }
+    
+    // 2. Send to Owner
+    try {
+      await sendOrderAlertEmail(order);
+    } catch (e) {
+      console.error("Failed to send cancellation email to owner:", e);
+    }
+  };
+
   const handleCancelOrder = async () => {
     if (!searchedOrder || searchedOrder.status > 1) return;
     const CANCELLED_STATUS = 5;
@@ -150,6 +171,9 @@ export default function OrderTracker({ user }) {
     ));
     setCancelConfirm(false);
     setCancelDone(true);
+    
+    // Trigger emails in the background
+    triggerCancellationEmails(cancelled);
   };
 
   // Simulate advancing the order status for demonstration

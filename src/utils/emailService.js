@@ -108,12 +108,17 @@ async function directBrevoSend(order, recipientType) {
     : 'DAITRA Owner';
 
   const isCompleted = recipientType === 'customer' && order.status === 4;
+  const isCancelled = order.status === 5;
 
-  const subject = isCompleted
-    ? `🎉 ORDER COMPLETED — ID: ${order.orderId} (DAITRA Couture)`
-    : (recipientType === 'customer'
-      ? `🎉 ORDER CONFIRMED — ID: ${order.orderId} (DAITRA Couture)`
-      : `🔔 NEW ORDER CAPTURED — ID: ${order.orderId} (${isOnline ? 'Online' : 'COD'})`);
+  const subject = isCancelled
+    ? (recipientType === 'customer'
+      ? `❌ ORDER CANCELLED — ID: ${order.orderId} (DAITRA Couture)`
+      : `🚨 ORDER CANCELLED BY CUSTOMER — ID: ${order.orderId}`)
+    : (isCompleted
+      ? `🎉 ORDER COMPLETED — ID: ${order.orderId} (DAITRA Couture)`
+      : (recipientType === 'customer'
+        ? `🎉 ORDER CONFIRMED — ID: ${order.orderId} (DAITRA Couture)`
+        : `🔔 NEW ORDER CAPTURED — ID: ${order.orderId} (${isOnline ? 'Online' : 'COD'})`));
 
   const websiteUrl = window.location.origin + '/';
 
@@ -143,20 +148,30 @@ async function directBrevoSend(order, recipientType) {
     `;
   }).join('');
 
-  const introHtml = isCompleted
-    ? `
-      <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Your order is completed, ${order.customerInfo.name}!</h2>
-      <p style="font-size: 14px; line-height: 1.6; color: #555555;">Thank you for shopping at DAITRA Couture! We are pleased to confirm that your order has been successfully delivered and completed. We hope you absolutely love your handcrafted traditional outfit. Below is the final summary invoice of your purchase.</p>
-    `
-    : (recipientType === 'customer'
+  const introHtml = isCancelled
+    ? (recipientType === 'customer'
       ? `
-        <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Thank you for shopping at DAITRA, ${order.customerInfo.name}!</h2>
-        <p style="font-size: 14px; line-height: 1.6; color: #555555;">We are thrilled to confirm your order. Our boutique artisans in Ahmedabad are already preparing your traditional garments with the utmost care. Below are your order details and delivery invoice.</p>
+        <h2 style="font-size: 18px; margin-top: 0; color: #dc3545;">Your order has been cancelled</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #555555;">This email confirms that your order <strong>${order.orderId}</strong> has been cancelled at your request. If any payment was made online, it will be automatically refunded to your original payment method within 5-7 business days.</p>
       `
       : `
-        <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Hello DAITRA Owner,</h2>
-        <p style="font-size: 14px; line-height: 1.6; color: #555555;">You have received a new customer order on your website dashboard. Below are the order receipt and payment parameters for fulfillment.</p>
-      `);
+        <h2 style="font-size: 18px; margin-top: 0; color: #dc3545;">Order Cancelled by Customer</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #555555;">Customer <strong>${order.customerInfo.name}</strong> has cancelled order <strong>${order.orderId}</strong> from the tracking dashboard. Please do not process or ship this order.</p>
+      `)
+    : (isCompleted
+      ? `
+        <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Your order is completed, ${order.customerInfo.name}!</h2>
+        <p style="font-size: 14px; line-height: 1.6; color: #555555;">Thank you for shopping at DAITRA Couture! We are pleased to confirm that your order has been successfully delivered and completed. We hope you absolutely love your handcrafted traditional outfit. Below is the final summary invoice of your purchase.</p>
+      `
+      : (recipientType === 'customer'
+        ? `
+          <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Thank you for shopping at DAITRA, ${order.customerInfo.name}!</h2>
+          <p style="font-size: 14px; line-height: 1.6; color: #555555;">We are thrilled to confirm your order. Our boutique artisans in Ahmedabad are already preparing your traditional garments with the utmost care. Below are your order details and delivery invoice.</p>
+        `
+        : `
+          <h2 style="font-size: 18px; margin-top: 0; color: #111111;">Hello DAITRA Owner,</h2>
+          <p style="font-size: 14px; line-height: 1.6; color: #555555;">You have received a new customer order on your website dashboard. Below are the order receipt and payment parameters for fulfillment.</p>
+        `));
 
   const ctaHtml = recipientType === 'customer'
     ? `
@@ -165,7 +180,7 @@ async function directBrevoSend(order, recipientType) {
         <a href="${websiteUrl}#/track/${order.orderId}" style="display: inline-block; padding: 12px 24px; border-radius: 4px; font-size: 14px; font-weight: bold; background-color: #0b0b0b; border: 1.5px solid #D4AF37; color: #D4AF37; text-decoration: none; margin: 5px; text-transform: uppercase; letter-spacing: 1px;">
           Track Order Details
         </a>
-        ${order.status < 4 ? `
+        ${(order.status < 4 && !isCancelled) ? `
           <a href="${websiteUrl}#/track/${order.orderId}?cancel=true" style="display: inline-block; padding: 12px 24px; border-radius: 4px; font-size: 14px; font-weight: bold; background-color: #721c24; border: 1.5px solid #f5c6cb; color: #f8d7da; text-decoration: none; margin: 5px; text-transform: uppercase; letter-spacing: 1px;">
             Cancel Order
           </a>
@@ -250,16 +265,25 @@ async function directBrevoSend(order, recipientType) {
         </div>
 
         <!-- Payment Status Indicator -->
-        <div style="margin: 20px 30px; padding: 15px; border-radius: 4px; font-size: 13px; text-align: center; ${
-          isOnline 
-            ? 'background-color: rgba(50, 205, 50, 0.1); border: 1px solid #32CD32; color: #228B22;' 
-            : 'background-color: rgba(212, 175, 55, 0.1); border: 1px solid #AA7C11; color: #8A6D0F;'
-        }">
-          ${isOnline 
-            ? `<strong>✓ PAYMENT SECURED ONLINE</strong> via ${order.paymentType}` 
-            : `<strong>⚠ CASH ON DELIVERY (COD) REQUESTED</strong> — Collect ₹${order.totals.finalTotal.toLocaleString('en-IN')} in cash.`
-          }
-        </div>
+        ${isCancelled
+          ? `
+            <div style="margin: 20px 30px; padding: 15px; border-radius: 4px; font-size: 13px; text-align: center; background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #bd2130;">
+              <strong>❌ ORDER CANCELLED</strong>
+            </div>
+          `
+          : `
+            <div style="margin: 20px 30px; padding: 15px; border-radius: 4px; font-size: 13px; text-align: center; ${
+              isOnline 
+                ? 'background-color: rgba(50, 205, 50, 0.1); border: 1px solid #32CD32; color: #228B22;' 
+                : 'background-color: rgba(212, 175, 55, 0.1); border: 1px solid #AA7C11; color: #8A6D0F;'
+            }">
+              ${isOnline 
+                ? `<strong>✓ PAYMENT SECURED ONLINE</strong> via ${order.paymentType}` 
+                : `<strong>⚠ CASH ON DELIVERY (COD) REQUESTED</strong> — Collect ₹${order.totals.finalTotal.toLocaleString('en-IN')} in cash.`
+              }
+            </div>
+          `
+        }
 
         ${ctaHtml}
 
