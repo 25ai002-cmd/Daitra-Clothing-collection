@@ -33,6 +33,7 @@ export default function BoutiqueAdmin() {
     category: '',
     price: '',
     originalPrice: '',
+    discount: '',
     image: '',
     additionalImages: '',
     video: '',
@@ -230,6 +231,40 @@ export default function BoutiqueAdmin() {
     });
   };
 
+  const handlePriceFieldChange = (field, value) => {
+    setNewProd(prev => {
+      const updated = { ...prev, [field]: value };
+      
+      const price = parseFloat(updated.price);
+      const originalPrice = parseFloat(updated.originalPrice);
+      const discount = parseFloat(updated.discount);
+      
+      if (field === 'price') {
+        if (!isNaN(price) && !isNaN(originalPrice) && originalPrice > 0) {
+          updated.discount = Math.max(0, Math.min(99, Math.round((1 - price / originalPrice) * 100))).toString();
+        } else if (!isNaN(price) && !isNaN(discount) && discount < 100) {
+          updated.originalPrice = Math.round(price / (1 - discount / 100)).toString();
+        }
+      } else if (field === 'originalPrice') {
+        if (!isNaN(originalPrice) && !isNaN(price) && originalPrice > 0) {
+          updated.discount = Math.max(0, Math.min(99, Math.round((1 - price / originalPrice) * 100))).toString();
+        } else if (!isNaN(originalPrice) && !isNaN(discount)) {
+          updated.price = Math.round(originalPrice * (1 - discount / 100)).toString();
+        }
+      } else if (field === 'discount') {
+        if (!isNaN(discount)) {
+          if (!isNaN(originalPrice) && originalPrice > 0) {
+            updated.price = Math.round(originalPrice * (1 - discount / 100)).toString();
+          } else if (!isNaN(price)) {
+            updated.originalPrice = Math.round(price / (1 - discount / 100)).toString();
+          }
+        }
+      }
+      
+      return updated;
+    });
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     if (!newProd.title.trim() || !newProd.price || !newProd.category || !newProd.image.trim()) {
@@ -278,6 +313,7 @@ export default function BoutiqueAdmin() {
       category: categories[0]?.id || '',
       price: '',
       originalPrice: '',
+      discount: '',
       image: '',
       additionalImages: '',
       video: '',
@@ -793,7 +829,7 @@ export default function BoutiqueAdmin() {
                     <input
                       type="number"
                       value={newProd.price}
-                      onChange={(e) => setNewProd(prev => ({ ...prev, price: e.target.value }))}
+                      onChange={(e) => handlePriceFieldChange('price', e.target.value)}
                       placeholder="e.g. 4500"
                       min="1"
                       required
@@ -801,15 +837,29 @@ export default function BoutiqueAdmin() {
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Original Price (₹ - For Strikethrough Discount)</label>
-                  <input
-                    type="number"
-                    value={newProd.originalPrice}
-                    onChange={(e) => setNewProd(prev => ({ ...prev, originalPrice: e.target.value }))}
-                    placeholder="e.g. 5999 (Leave blank to auto-calculate 30% OFF)"
-                    min="1"
-                  />
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Original Price (₹ - For Strikethrough Discount)</label>
+                    <input
+                      type="number"
+                      value={newProd.originalPrice}
+                      onChange={(e) => handlePriceFieldChange('originalPrice', e.target.value)}
+                      placeholder="e.g. 5999"
+                      min="1"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Discount (%)</label>
+                    <input
+                      type="number"
+                      value={newProd.discount}
+                      onChange={(e) => handlePriceFieldChange('discount', e.target.value)}
+                      placeholder="e.g. 30"
+                      min="0"
+                      max="99"
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
