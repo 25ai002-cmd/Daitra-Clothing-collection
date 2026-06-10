@@ -3888,10 +3888,56 @@ main {
   overflow-y: auto;
 }
 
-.gateway-card-form {
+/* Razorpay secure launch tab */
+.gateway-razorpay-pay {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  height: 100%;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.razorpay-info-box {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1.5px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 30px;
+  max-width: 420px;
+}
+
+.razorpay-info-box h4 {
+  font-family: 'Cinzel', serif;
+  color: var(--primary-gold);
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+}
+
+.razorpay-info-box p {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #a0a0a0;
+  margin-bottom: 20px;
+}
+
+.razorpay-supported-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.razorpay-supported-badges span {
+  font-size: 0.72rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 4px 12px;
+  color: #e0e0e0;
 }
 
 .pay-now-submit {

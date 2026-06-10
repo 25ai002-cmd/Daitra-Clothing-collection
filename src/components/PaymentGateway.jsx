@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, CreditCard, QrCode, X, Lock, CheckCircle, RefreshCw } from 'lucide-react';
+import { ShieldCheck, CreditCard, QrCode, X, Lock, RefreshCw } from 'lucide-react';
 import { db } from '../utils/db';
 
 export default function PaymentGateway({
@@ -10,30 +10,17 @@ export default function PaymentGateway({
   onSuccess,
   onCancel
 }) {
-  const [activeTab, setActiveTab] = useState('card'); // 'card' | 'upi'
+  const [activeTab, setActiveTab] = useState('razorpay'); // 'razorpay' | 'upi'
   const [processing, setProcessing] = useState(false);
   const [processStep, setProcessStep] = useState('');
-  const [showOtpScreen, setShowOtpScreen] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [otpError, setOtpError] = useState('');
-  const [otpMessage, setOtpMessage] = useState('');
   const [upiSettings, setUpiSettings] = useState({ upi_id: 'daitracouture@okaxis', upi_qr_url: '' });
   
-  // UPI payment options state
+  // UPI manual payment options state
   const [upiMethod, setUpiMethod] = useState('id'); // 'app' | 'id' | 'qr'
   const [upiIdInput, setUpiIdInput] = useState('');
   const [upiHandle, setUpiHandle] = useState('@okaxis');
   const [upiIdError, setUpiIdError] = useState('');
   const [isMobileDevice, setIsMobileDevice] = useState(false);
-  
-  // Card Form State
-  const [cardData, setCardData] = useState({
-    number: '',
-    expiry: '',
-    cvv: '',
-    name: ''
-  });
-  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     if (isOpen) {
@@ -59,81 +46,44 @@ export default function PaymentGateway({
 
   if (!isOpen) return null;
 
-  const handleInputChange = (e) => {
-    let { name, value } = e.target;
-    
-    // Formatting card details
-    if (name === 'number') {
-      value = value.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim().slice(0, 19);
-    } else if (name === 'expiry') {
-      value = value.replace(/\//g, '').replace(/(\d{2})/g, '$1/').trim();
-      if (value.endsWith('/')) value = value.slice(0, -1);
-      value = value.slice(0, 5);
-    } else if (name === 'cvv') {
-      value = value.replace(/\D/g, '').slice(0, 3);
-    }
-    
-    setCardData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-  };
-
-  const validateCardForm = () => {
-    const err = {};
-    if (cardData.number.replace(/\s/g, '').length !== 16) {
-      err.number = 'Enter a valid 16-digit card number';
-    }
-    if (!/^\d{2}\/\d{2}$/.test(cardData.expiry)) {
-      err.expiry = 'Enter expiry in MM/YY';
-    } else {
-      const [month, year] = cardData.expiry.split('/');
-      const m = parseInt(month, 10);
-      if (m < 1 || m > 12) err.expiry = 'Invalid expiry month';
-    }
-    if (cardData.cvv.length !== 3) {
-      err.cvv = 'CVV must be 3 digits';
-    }
-    if (!cardData.name.trim()) {
-      err.name = 'Cardholder name is required';
-    }
-    setErrors(err);
-    return Object.keys(err).length === 0;
-  };
-
-  const handleCardPay = (e) => {
-    e.preventDefault();
-    if (!validateCardForm()) return;
-
-    setProcessing(true);
-    setProcessStep('Verifying card credentials...');
-    
-    setTimeout(() => {
-      setProcessStep('Contacting your bank...');
-      setTimeout(() => {
-        setProcessing(false);
-        setShowOtpScreen(true);
-      }, 1500);
-    }, 1500);
-  };
-
-  const handleOtpSubmit = (e) => {
-    e.preventDefault();
-    if (!/^\d{4,6}$/.test(otp)) {
-      setOtpError('Invalid OTP code format. Enter the 4-6 digit code sent to your mobile device.');
+  // Initiate Razorpay Checkout Payment
+  const initiateRazorpayPayment = () => {
+    if (typeof window.Razorpay === 'undefined') {
+      alert('Razorpay Checkout SDK is not loaded. Please try again or refresh.');
       return;
     }
 
-    setOtpError('');
-    setShowOtpScreen(false);
-    setProcessing(true);
-    setProcessStep('Authorizing transaction...');
-    
-    setTimeout(() => {
-      setProcessStep('Capturing payment secure details...');
-      setTimeout(() => {
-        setProcessing(false);
-        onSuccess('Online Card Payment');
-      }, 1500);
-    }, 1500);
+    const options = {
+      key: "rzp_test_T01br2Bnh2Rgp1",
+      amount: Math.round(amount * 100), // in paise
+      currency: "INR",
+      name: "DAITRA Couture",
+      description: `Payment for Order ${orderId || ''}`,
+      image: "/assets/logo.png",
+      handler: function (response) {
+        console.log("Razorpay payment successful:", response);
+        onSuccess(`Online via Razorpay (Payment ID: ${response.razorpay_payment_id})`);
+      },
+      prefill: {
+        name: customerInfo?.name || '',
+        email: customerInfo?.email || '',
+        contact: customerInfo?.phone || ''
+      },
+      notes: {
+        order_id: orderId || '',
+        address: customerInfo?.address || ''
+      },
+      theme: {
+        color: "#0b0b0b"
+      }
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.on('payment.failed', function (response) {
+      console.error("Razorpay payment failed:", response.error);
+      alert(`Payment failed: ${response.error.description}`);
+    });
+    rzp.open();
   };
 
   const handleUpiScanMock = () => {
@@ -157,7 +107,6 @@ export default function PaymentGateway({
     }
     
     const fullUpi = `${upiIdInput.trim()}${upiHandle}`;
-    // Basic format verification (username@bank)
     if (!/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(fullUpi)) {
       setUpiIdError('Invalid UPI VPA address format');
       return;
@@ -189,10 +138,8 @@ export default function PaymentGateway({
     const tn = encodeURIComponent(`DAITRA Order ${orderId || ''}`);
     const upiUrl = `upi://pay?pa=${pa}&pn=${pn}&am=${amount}&cu=INR&tn=${tn}`;
     
-    // Attempt redirect to installed app handler
     window.location.href = upiUrl;
 
-    // Start background simulation
     setProcessing(true);
     setProcessStep('Launching your default UPI App...');
     
@@ -219,7 +166,7 @@ export default function PaymentGateway({
               <h3>DAITRA Secure Checkout</h3>
               <span className="secure-badge">
                 <ShieldCheck size={12} />
-                <span>100% Secured by RazorPay API</span>
+                <span>100% Secured Checkout</span>
               </span>
             </div>
           </div>
@@ -249,137 +196,54 @@ export default function PaymentGateway({
           </div>
         )}
 
-        {/* 3D Secure OTP Overlay Screen */}
-        {showOtpScreen && (
-          <div className="otp-screen-overlay">
-            <form onSubmit={handleOtpSubmit} className="otp-form-card">
-              <Lock size={36} className="otp-lock-icon" />
-              <h3>3D Secure Verification</h3>
-              <p>A verification OTP has been sent to +91 {customerInfo.phone}. Please enter it to complete the transaction.</p>
-              
-              <div className="form-group center-text">
-                <input
-                  type="text"
-                  placeholder="Enter verification code"
-                  value={otp}
-                  onChange={(e) => {
-                    setOtp(e.target.value);
-                    setOtpError('');
-                  }}
-                  className="otp-input-field"
-                  maxLength="6"
-                  required
-                />
-                {otpError && <span className="otp-error-text">{otpError}</span>}
-                {otpMessage && <span className="otp-success-text">{otpMessage}</span>}
-              </div>
-
-              <div className="otp-actions">
-                <button type="submit" className="btn btn-gold full-width">
-                  VERIFY & AUTHORIZE
-                </button>
-                <button 
-                  type="button" 
-                  className="otp-resend-btn" 
-                  onClick={() => {
-                    setOtpMessage('Verification code re-sent successfully!');
-                    setOtpError('');
-                    setTimeout(() => setOtpMessage(''), 5000);
-                  }}
-                >
-                  Resend OTP Code
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
         {/* Main Interface Wrapper */}
         <div className="gateway-body">
           {/* Left: Tab options */}
           <aside className="gateway-sidebar">
             <button 
-              className={`gateway-tab-btn ${activeTab === 'card' ? 'active' : ''}`}
-              onClick={() => setActiveTab('card')}
+              className={`gateway-tab-btn ${activeTab === 'razorpay' ? 'active' : ''}`}
+              onClick={() => setActiveTab('razorpay')}
             >
               <CreditCard size={18} />
-              <span>Cards (Credit/Debit)</span>
+              <span>Pay Online (Razorpay)</span>
             </button>
             <button 
               className={`gateway-tab-btn ${activeTab === 'upi' ? 'active' : ''}`}
               onClick={() => setActiveTab('upi')}
             >
               <QrCode size={18} />
-              <span>UPI Payments</span>
+              <span>Direct UPI (Manual)</span>
             </button>
           </aside>
 
           {/* Right: Tab content */}
           <div className="gateway-content-area">
-            {activeTab === 'card' && (
-              <form onSubmit={handleCardPay} className="gateway-card-form">
-                <div className="form-group">
-                  <label>Card Number</label>
-                  <input
-                    type="text"
-                    name="number"
-                    value={cardData.number}
-                    onChange={handleInputChange}
-                    placeholder="4111 2222 3333 4444"
-                    className={errors.number ? 'error' : ''}
-                    required
-                  />
-                  {errors.number && <span className="field-error">{errors.number}</span>}
-                </div>
-
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Expiry (MM/YY)</label>
-                    <input
-                      type="text"
-                      name="expiry"
-                      value={cardData.expiry}
-                      onChange={handleInputChange}
-                      placeholder="12/28"
-                      className={errors.expiry ? 'error' : ''}
-                      required
-                    />
-                    {errors.expiry && <span className="field-error">{errors.expiry}</span>}
-                  </div>
-
-                  <div className="form-group">
-                    <label>CVV</label>
-                    <input
-                      type="password"
-                      name="cvv"
-                      value={cardData.cvv}
-                      onChange={handleInputChange}
-                      placeholder="***"
-                      className={errors.cvv ? 'error' : ''}
-                      required
-                    />
-                    {errors.cvv && <span className="field-error">{errors.cvv}</span>}
+            {activeTab === 'razorpay' && (
+              <div className="gateway-razorpay-pay">
+                <div className="razorpay-info-box">
+                  <ShieldCheck size={32} className="gold-text" style={{ marginBottom: '10px' }} />
+                  <h4>Online Payment Gateway</h4>
+                  <p>
+                    Pay securely using your Credit/Debit Card, Netbanking, UPI, or major Wallets powered by Razorpay Checkout.
+                  </p>
+                  <div className="razorpay-supported-badges">
+                    <span>💳 Credit/Debit Cards</span>
+                    <span>🏦 Netbanking</span>
+                    <span>📱 UPI (GPay/PhonePe)</span>
+                    <span>👛 Wallets</span>
                   </div>
                 </div>
-
-                <div className="form-group">
-                  <label>Name on Card</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={cardData.name}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Seema Singh"
-                    className={errors.name ? 'error' : ''}
-                    required
-                  />
-                  {errors.name && <span className="field-error">{errors.name}</span>}
-                </div>
-
-                <button type="submit" className="btn btn-gold pay-now-submit">
-                  PAY SECURELY ₹{amount.toLocaleString('en-IN')}
+                
+                <button 
+                  type="button" 
+                  className="btn btn-gold pay-now-submit"
+                  onClick={initiateRazorpayPayment}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                  <Lock size={16} />
+                  <span>PAY SECURELY WITH RAZORPAY</span>
                 </button>
-              </form>
+              </div>
             )}
 
             {activeTab === 'upi' && (
@@ -507,7 +371,6 @@ export default function PaymentGateway({
                     <h4>Scan QR Code to Pay</h4>
                     <p className="scan-instructions">Open your UPI app (GPay, PhonePe, Paytm, BHIM) and scan this QR code to complete the transaction.</p>
                     
-                    {/* SVG Visual QR Mockup */}
                     <div className="qr-code-box-wrapper">
                       <div className="mock-qr-border">
                         {upiSettings.upi_qr_url ? (
@@ -554,7 +417,6 @@ export default function PaymentGateway({
                       <span className="qr-id-label">UPI ID: {upiSettings.upi_id}</span>
                     </div>
 
-                    {/* Confirmation Button */}
                     <button 
                       type="button" 
                       className="btn btn-gold simulate-scan-btn"
