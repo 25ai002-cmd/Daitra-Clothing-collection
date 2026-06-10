@@ -284,6 +284,68 @@ app.post('/api/refund', async (req, res) => {
     const keySecret = '35HVf4YzPFr5bmIXIRnDAMoc';
     const authString = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
 
+    console.log(`Checking Razorpay payment status for ID: ${paymentId}...`);
+
+    // 1. Fetch payment details from Razorpay to check its status
+    const statusRes = await fetch(`https://api.razorpay.com/v1/payments/${paymentId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Basic ${authString}`
+      }
+    });
+
+    if (!statusRes.ok) {
+      const errorData = await statusRes.json();
+      console.error('Fetch payment details error from Razorpay:', errorData);
+      return res.status(statusRes.status).json({
+        success: false,
+        error: errorData.error?.description || 'Failed to retrieve payment details from Razorpay.'
+      });
+    }
+
+    const paymentInfo = await statusRes.json();
+    console.log(`Razorpay Payment Status: ${paymentInfo.status}, Amount: ${paymentInfo.amount} paise`);
+
+    // 2. If the payment is only 'authorized', capture it first
+    if (paymentInfo.status === 'authorized') {
+      console.log(`Payment is 'authorized'. Automatically capturing transaction before refunding...`);
+      const captureRes = await fetch(`https://api.razorpay.com/v1/payments/${paymentId}/capture`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${authString}`
+        },
+        body: JSON.stringify({
+          amount: paymentInfo.amount,
+          currency: paymentInfo.currency || 'INR'
+        })
+      });
+
+      if (!captureRes.ok) {
+        const captureError = await captureRes.json();
+        console.error('Automatic capture failed:', captureError);
+        return res.status(captureRes.status).json({
+          success: false,
+          error: captureError.error?.description || 'Failed to capture the payment before refunding.'
+        });
+      }
+
+      const captureData = await captureRes.json();
+      console.log(`Payment successfully captured: ${captureData.status}`);
+    } else if (paymentInfo.status === 'refunded') {
+      return res.status(200).json({
+        success: true,
+        message: 'Payment has already been refunded.',
+        refund: { id: 'already_refunded' }
+      });
+    } else if (paymentInfo.status !== 'captured') {
+      return res.status(400).json({
+        success: false,
+        error: `Cannot refund payment in status: ${paymentInfo.status}. Only captured payments can be refunded.`
+      });
+    }
+
+    // 3. Initiate the refund
     const refundBody = {};
     if (amount) {
       refundBody.amount = Math.round(amount * 100); // Razorpay expects amount in paise (1 INR = 100 paise)
