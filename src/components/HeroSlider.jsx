@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const SLIDES = [
   {
-    image: "/dresses/60.jpg",
+    image: "/assets/banner_festive.png",
     title: "Navy Anarkali Zari Gown",
     subtitle: "DAITRA COUTURE EDIT",
     tagline: "Majestic navy Anarkali gown with a rich gold zari border and an exquisite Banarasi-weave dupatta.",
@@ -10,7 +10,7 @@ const SLIDES = [
     category: "kurtas"
   },
   {
-    image: "/dresses/66.jpg",
+    image: "/assets/banner_gowns.png",
     title: "Midnight Navy Zari Anarkali",
     subtitle: "THE GOWNS COLLECTION",
     tagline: "The crown jewel of Daitra's collection — a floor-length georgette Anarkali with gold zari embroidery.",
@@ -18,7 +18,7 @@ const SLIDES = [
     category: "gowns"
   },
   {
-    image: "/dresses/20.jpg",
+    image: "/assets/banner_fusion.png",
     title: "Sage Green Embroidered Coord Set",
     subtitle: "INDO-WESTERN FUSION",
     tagline: "Earthy sage green button-down shirt set with floral embroidered patch pockets and straight-cut pants.",
@@ -43,8 +43,8 @@ export default function HeroSlider({ onShopClick }) {
         <div 
           key={idx} 
           className={`hero-slide ${idx === current ? 'active' : ''}`}
+          style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.65)), url(${slide.image})` }}
         >
-          <div className="hero-slide-bg" style={{ backgroundImage: `url(${slide.image})` }} />
           <div className="hero-content">
             <span className="hero-subtitle">{slide.subtitle}</span>
             <h1 className="hero-title">{slide.title}</h1>
@@ -55,9 +55,6 @@ export default function HeroSlider({ onShopClick }) {
             >
               {slide.btnText}
             </button>
-          </div>
-          <div className="hero-image-wrap">
-            <img src={slide.image} alt={slide.title} className="hero-slide-img" />
           </div>
         </div>
       ))}
