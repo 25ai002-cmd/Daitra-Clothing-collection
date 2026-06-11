@@ -11,6 +11,7 @@ export default function OrderTracker({ user }) {
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [cancelDone, setCancelDone] = useState(false);
   const [refundProcessing, setRefundProcessing] = useState(false);
+  const [showCancelPopup, setShowCancelPopup] = useState(false);
   const detailsRef = useRef(null);
 
   // Statuses: 0=Placed, 1=Processing, 2=Dispatched, 3=Out for Delivery, 4=Delivered, 5=Cancelled
@@ -208,6 +209,7 @@ export default function OrderTracker({ user }) {
     ));
     setCancelConfirm(false);
     setCancelDone(true);
+    setShowCancelPopup(true);
     
     // Trigger emails in the background
     triggerCancellationEmails(cancelled);
@@ -481,6 +483,29 @@ export default function OrderTracker({ user }) {
           </div>
         )}
       </div>
+      {/* Cancel Popup Confirmation Modal */}
+      {showCancelPopup && (
+        <div className="popup-overlay" onClick={() => setShowCancelPopup(false)}>
+          <div className="popup-box" onClick={(e) => e.stopPropagation()}>
+            <div className="popup-header">
+              <XCircle size={48} className="cancelled-icon" style={{ color: '#ff4d4d' }} />
+              <h3>Order Cancelled!</h3>
+            </div>
+            <div className="popup-body">
+              <p>Your order has been cancelled successfully. If paid online, the refund will be credited to your respective payment gateway during office hours.</p>
+            </div>
+            <div className="popup-footer">
+              <button 
+                className="btn popup-close-btn" 
+                onClick={() => setShowCancelPopup(false)}
+                style={{ background: '#ff4d4d', border: '1px solid #ff4d4d', color: '#fff' }}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

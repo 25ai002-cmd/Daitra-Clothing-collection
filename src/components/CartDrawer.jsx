@@ -19,6 +19,7 @@ export default function CartDrawer({
   const [appliedDiscount, setAppliedDiscount] = useState(0); // in percentage
   const [promoError, setPromoError] = useState('');
   const [promoSuccess, setPromoSuccess] = useState('');
+  const [showPlacedPopup, setShowPlacedPopup] = useState(false);
 
   // Shipping Form State
   const [formData, setFormData] = useState({
@@ -96,6 +97,7 @@ export default function CartDrawer({
     // Dispatch event to refresh admin consoles
     window.dispatchEvent(new Event('daitra_new_order_placed'));
     setCheckoutStep('success');
+    setShowPlacedPopup(true);
   };
 
   if (!isOpen) return null;
@@ -597,6 +599,25 @@ export default function CartDrawer({
           onSuccess={handlePaymentSuccess}
           onCancel={handlePaymentCancel}
         />
+      )}
+      {/* Placed Popup Confirmation Modal */}
+      {showPlacedPopup && (
+        <div className="popup-overlay" onClick={() => setShowPlacedPopup(false)}>
+          <div className="popup-box" onClick={(e) => e.stopPropagation()}>
+            <div className="popup-header">
+              <CheckCircle2 size={48} className="success-icon" style={{ color: 'var(--primary-gold)' }} />
+              <h3>Order Placed!</h3>
+            </div>
+            <div className="popup-body">
+              <p>Your order has been placed successfully. All details of your order have been sent to your email (<strong>{formData.email}</strong>).</p>
+            </div>
+            <div className="popup-footer">
+              <button className="btn btn-gold popup-close-btn" onClick={() => setShowPlacedPopup(false)}>
+                OK, Got It
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
