@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Shield, Key } from 'lucide-react';
+import { X, Shield, Key, Check, ChevronRight } from 'lucide-react';
 
 // Native JWT Decoder helper to parse Google ID Tokens
 const decodeJwt = (token) => {
@@ -52,12 +52,21 @@ export default function GoogleLoginModal({ isOpen, onClose, onLoginSuccess }) {
             }
           });
 
-          const container = document.getElementById("gsi-button-container");
-          if (container) {
-            window.google.accounts.id.renderButton(container, {
+          const cardContainer = document.getElementById("gsi-button-container-card");
+          if (cardContainer) {
+            window.google.accounts.id.renderButton(cardContainer, {
               theme: "outline",
               size: "large",
-              width: 320
+              width: 400
+            });
+          }
+
+          const btnContainer = document.getElementById("gsi-button-container-btn");
+          if (btnContainer) {
+            window.google.accounts.id.renderButton(btnContainer, {
+              theme: "outline",
+              size: "large",
+              width: 400
             });
             buttonRendered = true;
           }
@@ -163,12 +172,119 @@ export default function GoogleLoginModal({ isOpen, onClose, onLoginSuccess }) {
         {step === 1 && (
           <>
             {clientId ? (
-              /* SDK Enabled View */
-              <div className="google-auth-body fade-in" style={{ alignItems: 'center', justifyContent: 'center', minHeight: '260px', gap: '20px' }}>
-                <p style={{ fontSize: '0.88rem', color: '#5f6368', textAlign: 'center', maxWidth: '320px', lineHeight: '1.5' }}>
-                  A secure official Google window will open. Please authenticate your Google account:
-                </p>
-                <div id="gsi-button-container" style={{ margin: '10px 0' }}></div>
+              /* SDK Enabled View matching the custom Google Authentication mock */
+              <div className="google-auth-body fade-in" style={{ gap: '16px', padding: '10px 0', flexDirection: 'column', display: 'flex' }}>
+                {/* Notice box */}
+                <div className="google-notice-box" style={{ 
+                  display: 'flex', 
+                  alignItems: 'flex-start', 
+                  gap: '12px', 
+                  backgroundColor: '#f8f9fa', 
+                  padding: '12px 16px', 
+                  borderRadius: '8px',
+                  width: '100%',
+                  boxSizing: 'border-box'
+                }}>
+                  <Shield size={16} style={{ color: '#5f6368', marginTop: '2px', flexShrink: 0 }} />
+                  <p style={{ 
+                    fontSize: '0.82rem', 
+                    color: '#5f6368', 
+                    margin: 0, 
+                    lineHeight: '1.4', 
+                    textAlign: 'left' 
+                  }}>
+                    A secure, official Google window will open. Please authenticate your account to continue.
+                  </p>
+                </div>
+
+                {/* Account Selection Card */}
+                <div className="google-account-card" style={{ 
+                  position: 'relative',
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between', 
+                  border: '1px solid #dadce0', 
+                  borderRadius: '8px', 
+                  padding: '12px 16px',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  background: '#ffffff'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ 
+                      width: '32px', 
+                      height: '32px', 
+                      borderRadius: '50%', 
+                      backgroundColor: '#000000', 
+                      color: '#ffffff', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      fontWeight: 'bold', 
+                      fontSize: '0.9rem' 
+                    }}>
+                      B
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                      <span style={{ fontSize: '0.88rem', fontWeight: 'bold', color: '#202124' }}>Sign in as BAROT</span>
+                      <span style={{ fontSize: '0.8rem', color: '#5f6368' }}>25ai002@sxca.edu.in</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} style={{ color: '#5f6368' }} />
+                  
+                  {/* Invisible Overlay GSI Button on Card */}
+                  <div className="gsi-invisible-overlay" style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    opacity: 0,
+                    zIndex: 2,
+                    cursor: 'pointer',
+                    overflow: 'hidden'
+                  }}>
+                    <div id="gsi-button-container-card" style={{ width: '100%', height: '100%' }}></div>
+                  </div>
+                </div>
+
+                {/* Continue Securely Pill Button */}
+                <div style={{ position: 'relative', width: '100%', marginTop: '10px' }}>
+                  <button type="button" style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '8px', 
+                    width: '100%', 
+                    backgroundColor: '#111111', 
+                    color: '#ffffff', 
+                    border: 'none', 
+                    borderRadius: '24px', 
+                    padding: '12px 24px', 
+                    fontSize: '0.88rem', 
+                    fontWeight: 'bold', 
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                  }}>
+                    <Check size={16} />
+                    <span>Continue securely</span>
+                  </button>
+
+                  {/* Invisible Overlay GSI Button on Continue Button */}
+                  <div className="gsi-invisible-overlay" style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    opacity: 0,
+                    zIndex: 2,
+                    cursor: 'pointer',
+                    overflow: 'hidden'
+                  }}>
+                    <div id="gsi-button-container-btn" style={{ width: '100%', height: '100%' }}></div>
+                  </div>
+                </div>
               </div>
             ) : (
               /* Local Simulation View */
