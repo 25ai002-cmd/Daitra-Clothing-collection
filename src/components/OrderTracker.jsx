@@ -12,6 +12,9 @@ export default function OrderTracker({ user }) {
   const [cancelDone, setCancelDone] = useState(false);
   const [refundProcessing, setRefundProcessing] = useState(false);
   const [showCancelPopup, setShowCancelPopup] = useState(false);
+  const [popupTitle, setPopupTitle] = useState('');
+  const [popupDesc, setPopupDesc] = useState('');
+  const [popupType, setPopupType] = useState('success'); // 'success' | 'warning' | 'error'
   const detailsRef = useRef(null);
 
   // Statuses: 0=Placed, 1=Processing, 2=Dispatched, 3=Out for Delivery, 4=Delivered, 5=Cancelled
@@ -186,16 +189,34 @@ export default function OrderTracker({ user }) {
 
         const data = await response.json();
         if (response.ok && data.success) {
-          alert(`Refund of ₹${searchedOrder.totals.finalTotal.toLocaleString('en-IN')} has been successfully initiated to your original payment method. Refund Transaction ID: ${data.refund.id}`);
+          setPopupTitle('Refund Initiated!');
+          setPopupDesc(`Refund of ₹${searchedOrder.totals.finalTotal.toLocaleString('en-IN')} has been successfully initiated to your original payment method. Refund Transaction ID: ${data.refund.id}`);
+          setPopupType('success');
         } else {
           console.error('Refund failed:', data.error);
-          alert(`Order cancellation proceeding, but automatic refund failed: ${data.error || 'Unknown error'}. Our support team will process it manually.`);
+          setPopupTitle('Cancellation Warning');
+          setPopupDesc(`Order cancellation proceeding, but automatic refund failed: ${data.error || 'invalid request sent'}. Our support team will process it manually during office hours.`);
+          setPopupType('warning');
         }
       } catch (err) {
         console.error('Refund error:', err);
-        alert('Order cancellation proceeding, but we encountered a network error while initiating the refund. Our support team will process it manually.');
+        setPopupTitle('Cancellation Warning');
+        setPopupDesc('Order cancellation proceeding, but we encountered a network error while initiating the refund. Our support team will process it manually during office hours.');
+        setPopupType('warning');
       } finally {
         setRefundProcessing(false);
+      }
+    } else {
+      // Check if it was COD or Manual UPI
+      const isOnlineUPI = searchedOrder.paymentType && searchedOrder.paymentType.includes('UPI');
+      if (isOnlineUPI) {
+        setPopupTitle('Order Cancelled!');
+        setPopupDesc('Your order has been cancelled successfully. If paid online via UPI QR or App, the refund will be credited to your respective payment gateway during office hours.');
+        setPopupType('success');
+      } else {
+        setPopupTitle('Order Cancelled!');
+        setPopupDesc('Your order has been cancelled successfully. Since this was Cash on Delivery (COD), no refund is required.');
+        setPopupType('success');
       }
     }
 
@@ -488,17 +509,23 @@ export default function OrderTracker({ user }) {
         <div className="popup-overlay" onClick={() => setShowCancelPopup(false)}>
           <div className="popup-box" onClick={(e) => e.stopPropagation()}>
             <div className="popup-header">
-              <XCircle size={48} className="cancelled-icon" style={{ color: '#ff4d4d' }} />
-              <h3>Order Cancelled!</h3>
+              {popupType === 'success' ? (
+                <CheckCircle2 size={48} className="success-icon" style={{ color: 'var(--primary-gold)' }} />
+              ) : popupType === 'warning' ? (
+                <AlertTriangle size={48} className="warning-icon-gold" style={{ color: 'var(--primary-gold)' }} />
+              ) : (
+                <XCircle size={48} className="cancelled-icon" style={{ color: '#ff4d4d' }} />
+              )}
+              <h3>{popupTitle}</h3>
             </div>
             <div className="popup-body">
-              <p>Your order has been cancelled successfully. If paid online, the refund will be credited to your respective payment gateway during office hours.</p>
+              <p>{popupDesc}</p>
             </div>
             <div className="popup-footer">
               <button 
                 className="btn popup-close-btn" 
                 onClick={() => setShowCancelPopup(false)}
-                style={{ background: '#ff4d4d', border: '1px solid #ff4d4d', color: '#fff' }}
+                style={popupType === 'success' ? {} : { background: '#ff4d4d', border: '1px solid #ff4d4d', color: '#fff' }}
               >
                 OK
               </button>
