@@ -152,7 +152,7 @@ export default function ProductDetailModal({
                   muted 
                   loop 
                   className="modal-main-img" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
               ) : (
                 <img src={mediaList[activeImgIndex]} alt={product.title} className="modal-main-img" />

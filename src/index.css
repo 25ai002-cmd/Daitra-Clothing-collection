@@ -1871,12 +1871,17 @@ main {
   position: relative;
   flex: 1;
   height: 600px;
+  background-color: #ffffff; /* Seamless white background for centered catalog images */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .modal-main-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* Show the entire photo centered without cropping */
 }
 
 .modal-badge {
