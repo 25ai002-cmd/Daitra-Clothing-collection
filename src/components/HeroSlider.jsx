@@ -3,25 +3,25 @@ import React, { useState, useEffect } from 'react';
 const SLIDES = [
   {
     image: "/dresses/60.jpg",
-    title: "Festive Splendor",
-    subtitle: "DAITRA COUTURE EDIT 2026",
-    tagline: "Embrace the timeless beauty of hand-embroidered silks designed to make every occasion unforgettable.",
+    title: "Navy Anarkali Zari Gown",
+    subtitle: "DAITRA COUTURE EDIT",
+    tagline: "Majestic navy Anarkali gown with a rich gold zari border and an exquisite Banarasi-weave dupatta.",
     btnText: "Explore Kurtas & Sets",
     category: "kurtas"
   },
   {
     image: "/dresses/66.jpg",
-    title: "Ethnic Grace",
+    title: "Midnight Navy Zari Anarkali",
     subtitle: "THE GOWNS COLLECTION",
-    tagline: "Experience modern elegance in flared georgettes and weaves that sweep the floor with royal vibes.",
+    tagline: "The crown jewel of Daitra's collection — a floor-length georgette Anarkali with gold zari embroidery.",
     btnText: "Discover Gowns",
     category: "gowns"
   },
   {
     image: "/dresses/20.jpg",
-    title: "Modern Heritage",
+    title: "Sage Green Embroidered Coord Set",
     subtitle: "INDO-WESTERN FUSION",
-    tagline: "Chic coord sets designed for the modern woman who values tradition, craftsmanship, and comfort.",
+    tagline: "Earthy sage green button-down shirt set with floral embroidered patch pockets and straight-cut pants.",
     btnText: "Shop Fusion Wear",
     category: "fusion"
   }
@@ -43,8 +43,8 @@ export default function HeroSlider({ onShopClick }) {
         <div 
           key={idx} 
           className={`hero-slide ${idx === current ? 'active' : ''}`}
-          style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.65)), url(${slide.image})` }}
         >
+          <div className="hero-slide-bg" style={{ backgroundImage: `url(${slide.image})` }} />
           <div className="hero-content">
             <span className="hero-subtitle">{slide.subtitle}</span>
             <h1 className="hero-title">{slide.title}</h1>
@@ -55,6 +55,9 @@ export default function HeroSlider({ onShopClick }) {
             >
               {slide.btnText}
             </button>
+          </div>
+          <div className="hero-image-wrap">
+            <img src={slide.image} alt={slide.title} className="hero-slide-img" />
           </div>
         </div>
       ))}
