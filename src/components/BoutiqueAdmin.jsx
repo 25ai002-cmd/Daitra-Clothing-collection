@@ -54,6 +54,7 @@ export default function BoutiqueAdmin() {
   
   const [catalogSuccess, setCatalogSuccess] = useState('');
   const [catalogError, setCatalogError] = useState('');
+  const [uploadingField, setUploadingField] = useState(null);
 
   // Status Labels matching OrderTracker.jsx
   const STATUSES = [
@@ -198,44 +199,67 @@ export default function BoutiqueAdmin() {
   };
 
   // Add Product Dress
-  const handleFileRead = (e, fieldName) => {
+  const handleFileRead = async (e, fieldName) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setNewProd(prev => ({
-        ...prev,
-        [fieldName]: reader.result
-      }));
-    };
-    reader.readAsDataURL(file);
+    setUploadingField(fieldName);
+    setCatalogError('');
+    try {
+      const onlineUrl = await db.uploadFile(file);
+      if (onlineUrl) {
+        setNewProd(prev => ({
+          ...prev,
+          [fieldName]: onlineUrl
+        }));
+        setCatalogSuccess(`File uploaded online successfully!`);
+        setTimeout(() => setCatalogSuccess(''), 3000);
+      } else {
+        setCatalogError(`Failed to upload file online.`);
+      }
+    } catch (err) {
+      console.error(err);
+      setCatalogError(`Upload error: ${err.message}`);
+    } finally {
+      setUploadingField(null);
+    }
   };
 
-  const handleMultipleFilesRead = (e) => {
+  const handleMultipleFilesRead = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    let loadedCount = 0;
-    const loadedUrls = [];
-
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        loadedUrls.push(reader.result);
-        loadedCount++;
-        if (loadedCount === files.length) {
-          setNewProd(prev => {
-            const current = prev.additionalImages ? prev.additionalImages + ', ' : '';
-            return {
-              ...prev,
-              additionalImages: current + loadedUrls.join(', ')
-            };
-          });
+    setUploadingField('additionalImages');
+    setCatalogError('');
+    try {
+      const onlineUrls = [];
+      for (const file of files) {
+        const url = await db.uploadFile(file);
+        if (url) {
+          onlineUrls.push(url);
         }
-      };
-      reader.readAsDataURL(file);
-    });
+      }
+      
+      if (onlineUrls.length > 0) {
+        setNewProd(prev => {
+          const current = prev.additionalImages ? prev.additionalImages.trim() : '';
+          const separator = current && !current.endsWith(',') ? ', ' : ' ';
+          return {
+            ...prev,
+            additionalImages: (current + separator + onlineUrls.join(', ')).trim().replace(/^,|,$/g, '').trim()
+          };
+        });
+        setCatalogSuccess(`Uploaded ${onlineUrls.length} file(s) online successfully!`);
+        setTimeout(() => setCatalogSuccess(''), 3000);
+      } else {
+        setCatalogError(`Failed to upload additional photos online.`);
+      }
+    } catch (err) {
+      console.error(err);
+      setCatalogError(`Additional photos upload error: ${err.message}`);
+    } finally {
+      setUploadingField(null);
+    }
   };
 
   const handlePriceFieldChange = (field, value) => {
@@ -1033,13 +1057,14 @@ export default function BoutiqueAdmin() {
                     required
                   />
                   <div className="file-upload-row" style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <label className="btn btn-dark" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem', margin: 0, textTransform: 'none', letterSpacing: '0.5px' }}>
-                      Choose Local Photo File...
+                    <label className="btn btn-dark" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem', margin: 0, textTransform: 'none', letterSpacing: '0.5px', opacity: uploadingField === 'image' ? 0.7 : 1 }}>
+                      {uploadingField === 'image' ? 'Uploading online...' : 'Choose Local Photo File...'}
                       <input 
                         type="file" 
                         accept="image/*" 
                         onChange={(e) => handleFileRead(e, 'image')} 
                         style={{ display: 'none' }}
+                        disabled={uploadingField !== null}
                       />
                     </label>
                     {newProd.image && (
@@ -1060,14 +1085,15 @@ export default function BoutiqueAdmin() {
                     placeholder="e.g. /assets/aarya_back.png, /assets/aarya_side.png"
                   />
                   <div className="file-upload-row" style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <label className="btn btn-dark" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem', margin: 0, textTransform: 'none', letterSpacing: '0.5px' }}>
-                      Add Local Angle Files...
+                    <label className="btn btn-dark" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem', margin: 0, textTransform: 'none', letterSpacing: '0.5px', opacity: uploadingField === 'additionalImages' ? 0.7 : 1 }}>
+                      {uploadingField === 'additionalImages' ? 'Uploading online...' : 'Add Local Angle Files...'}
                       <input 
                         type="file" 
                         accept="image/*" 
                         multiple
                         onChange={handleMultipleFilesRead} 
                         style={{ display: 'none' }}
+                        disabled={uploadingField !== null}
                       />
                     </label>
                     {newProd.additionalImages && (
@@ -1087,13 +1113,14 @@ export default function BoutiqueAdmin() {
                     placeholder="e.g. https://www.w3schools.com/html/mov_bbb.mp4"
                   />
                   <div className="file-upload-row" style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <label className="btn btn-dark" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem', margin: 0, textTransform: 'none', letterSpacing: '0.5px' }}>
-                      Choose Local Video File...
+                    <label className="btn btn-dark" style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem', margin: 0, textTransform: 'none', letterSpacing: '0.5px', opacity: uploadingField === 'video' ? 0.7 : 1 }}>
+                      {uploadingField === 'video' ? 'Uploading online...' : 'Choose Local Video File...'}
                       <input 
                         type="file" 
                         accept="video/*" 
                         onChange={(e) => handleFileRead(e, 'video')} 
                         style={{ display: 'none' }}
+                        disabled={uploadingField !== null}
                       />
                     </label>
                     {newProd.video && (

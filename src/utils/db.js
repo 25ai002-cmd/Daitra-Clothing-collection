@@ -129,9 +129,25 @@ const getHeaders = () => ({
   'Prefer': 'return=representation'
 });
 
+const isValidUrlOrPath = (str) => {
+  if (typeof str !== 'string') return false;
+  const s = str.trim();
+  return s.startsWith('/') || s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:');
+};
+
 export const db = {
   // --- PRODUCTS ---
   async getProducts() {
+    const sanitizeProductsList = (list) => {
+      if (!list || !Array.isArray(list)) return list;
+      return list.map(p => {
+        if (p.images && Array.isArray(p.images)) {
+          p.images = p.images.filter(isValidUrlOrPath);
+        }
+        return p;
+      });
+    };
+
     if (isCloudEnabled) {
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/daitra_products?select=*`, {
@@ -141,14 +157,15 @@ export const db = {
           const data = await res.json();
           if (data && data.length > 0) {
             // Sort by id to maintain default catalog order
-            return data.sort((a, b) => a.id - b.id);
+            const sorted = data.sort((a, b) => a.id - b.id);
+            return sanitizeProductsList(sorted);
           }
           // Seed cloud DB if empty
           console.log("Cloud products database empty, seeding seedProducts...");
           for (const prod of seedProducts) {
             await this.saveProduct(prod);
           }
-          return seedProducts;
+          return sanitizeProductsList(seedProducts);
         }
       } catch (err) {
         console.error("Error loading products from Supabase:", err);
@@ -162,15 +179,18 @@ export const db = {
       const parsed = JSON.parse(saved);
       const isOldData = parsed.length > 0 && parsed[0].image && parsed[0].image.startsWith('/assets/');
       if (!isOldData && parsed.length > 0 && parsed[0].material) {
-        return parsed;
+        return sanitizeProductsList(parsed);
       }
     }
     localStorage.setItem('daitra_db_products', JSON.stringify(seedProducts));
     localStorage.setItem('daitra_db_version', 'v2_89_products');
-    return seedProducts;
+    return sanitizeProductsList(seedProducts);
   },
 
   async saveProduct(product) {
+    if (product && product.images && Array.isArray(product.images)) {
+      product.images = product.images.filter(isValidUrlOrPath);
+    }
     if (isCloudEnabled) {
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/daitra_products`, {
@@ -488,6 +508,9 @@ export const db = {
   },
 
   async updateProduct(product) {
+    if (product && product.images && Array.isArray(product.images)) {
+      product.images = product.images.filter(isValidUrlOrPath);
+    }
     if (isCloudEnabled) {
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/daitra_products?id=eq.${product.id}`, {
@@ -555,5 +578,70 @@ export const db = {
     const updated = cats.map(c => c.id === category.id ? category : c);
     localStorage.setItem('daitra_db_categories', JSON.stringify(updated));
     return category;
+  },
+
+  async uploadFile(file) {
+    if (isCloudEnabled) {
+      try {
+        const bucketName = 'daitra_media';
+        const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+        
+        // Try creating the bucket first (will do nothing or error if it already exists, which we ignore)
+        await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({
+            id: bucketName,
+            name: bucketName,
+            public: true,
+            file_size_limit: 52428800, // 50MB
+            allowed_mime_types: ['image/*', 'video/*']
+          })
+        });
+
+        // Upload the file to the bucket
+        const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucketName}/${fileName}`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': file.type
+          },
+          body: file
+        });
+
+        if (uploadRes.ok) {
+          return `${SUPABASE_URL}/storage/v1/object/public/${bucketName}/${fileName}`;
+        } else {
+          const errText = await uploadRes.text();
+          console.error("Supabase storage upload failed:", errText);
+        }
+      } catch (err) {
+        console.error("Error uploading file to Supabase:", err);
+      }
+    }
+
+    // Fallback: If cloud is not enabled, or if it failed, we use tmpfiles.org uploader
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await fetch('https://tmpfiles.org/api/v1/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (res.ok) {
+        const json = await res.json();
+        if (json && json.status === 'success' && json.data && json.data.url) {
+          // Replace tmpfiles view URL with the direct download URL
+          return json.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
+        }
+      }
+    } catch (err) {
+      console.error("Error uploading to tmpfiles.org:", err);
+    }
+
+    return null;
   }
 };
