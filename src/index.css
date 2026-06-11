@@ -3772,6 +3772,49 @@ main {
   color: var(--text-muted);
 }
 
+.gateway-error-banner {
+  background-color: rgba(220, 53, 69, 0.15);
+  border-bottom: 1.5px solid rgba(220, 53, 69, 0.4);
+  color: #ff6b6b;
+  padding: 10px 25px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-out;
+  position: relative;
+}
+
+.gateway-error-banner .error-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.gateway-error-banner .error-text {
+  flex-grow: 1;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.gateway-error-banner .error-close-btn {
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.gateway-error-banner .error-close-btn:hover {
+  background-color: rgba(220, 53, 69, 0.25);
+  color: #ff8787;
+}
+
 /* OTP verification form card */
 .otp-screen-overlay {
   position: absolute;

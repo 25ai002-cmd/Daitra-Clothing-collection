@@ -21,9 +21,11 @@ export default function PaymentGateway({
   const [upiHandle, setUpiHandle] = useState('@okaxis');
   const [upiIdError, setUpiIdError] = useState('');
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (isOpen) {
+      setErrorMsg('');
       const loadUpiSettings = async () => {
         const settings = await db.getSettings();
         if (settings) {
@@ -48,8 +50,9 @@ export default function PaymentGateway({
 
   // Initiate Razorpay Checkout Payment
   const initiateRazorpayPayment = () => {
+    setErrorMsg('');
     if (typeof window.Razorpay === 'undefined') {
-      alert('Razorpay Checkout SDK is not loaded. Please try again or refresh.');
+      setErrorMsg('Razorpay Checkout SDK is not loaded. Please try again or refresh.');
       return;
     }
 
@@ -81,7 +84,7 @@ export default function PaymentGateway({
     const rzp = new window.Razorpay(options);
     rzp.on('payment.failed', function (response) {
       console.error("Razorpay payment failed:", response.error);
-      alert(`Payment failed: ${response.error.description}`);
+      setErrorMsg(`Payment failed: ${response.error.description || 'Unknown error occurred.'}`);
     });
     rzp.open();
   };
@@ -187,6 +190,17 @@ export default function PaymentGateway({
           </div>
         </div>
 
+        {/* Error Alert Box */}
+        {errorMsg && (
+          <div className="gateway-error-banner">
+            <span className="error-icon">⚠️</span>
+            <div className="error-text">{errorMsg}</div>
+            <button className="error-close-btn" type="button" onClick={() => setErrorMsg('')}>
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
         {/* Processing Spinner Loader Overlay */}
         {processing && (
           <div className="gateway-loader-overlay">
@@ -202,14 +216,14 @@ export default function PaymentGateway({
           <aside className="gateway-sidebar">
             <button 
               className={`gateway-tab-btn ${activeTab === 'razorpay' ? 'active' : ''}`}
-              onClick={() => setActiveTab('razorpay')}
+              onClick={() => { setActiveTab('razorpay'); setErrorMsg(''); }}
             >
               <CreditCard size={18} />
               <span>Pay Online (Razorpay)</span>
             </button>
             <button 
               className={`gateway-tab-btn ${activeTab === 'upi' ? 'active' : ''}`}
-              onClick={() => setActiveTab('upi')}
+              onClick={() => { setActiveTab('upi'); setErrorMsg(''); }}
             >
               <QrCode size={18} />
               <span>Direct UPI (Manual)</span>
