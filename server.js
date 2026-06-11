@@ -390,6 +390,88 @@ app.post('/api/refund', async (req, res) => {
   }
 });
 
+// POST endpoint for secure online file uploads
+app.post('/api/upload', express.raw({ limit: '50mb', type: '*/*' }), async (req, res) => {
+  try {
+    const filename = req.query.filename || 'upload.jpg';
+    const contentType = req.headers['content-type'] || 'image/jpeg';
+    
+    if (!req.body || req.body.length === 0) {
+      return res.status(400).json({ error: 'No file data received.' });
+    }
+
+    // Try uploading to Supabase if credentials exist on the server
+    const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
+    const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || '';
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      try {
+        const bucketName = 'daitra_media';
+        const fileName = `${Date.now()}_${filename.replace(/\s+/g, '_')}`;
+
+        // Create bucket if it doesn't exist
+        const headers = {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        };
+        await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            id: bucketName,
+            name: bucketName,
+            public: true,
+            file_size_limit: 52428800,
+            allowed_mime_types: ['image/*', 'video/*']
+          })
+        });
+
+        // Upload file
+        const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucketName}/${fileName}`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': contentType
+          },
+          body: req.body
+        });
+
+        if (uploadRes.ok) {
+          const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${bucketName}/${fileName}`;
+          return res.json({ url: publicUrl });
+        }
+      } catch (err) {
+        console.error("Express Supabase Storage upload failed, falling back:", err);
+      }
+    }
+
+    // Fallback: Upload to tmpfiles.org
+    const formData = new FormData();
+    const blob = new Blob([req.body], { type: contentType });
+    formData.append('file', blob, filename);
+
+    const tmpfilesRes = await fetch('https://tmpfiles.org/api/v1/upload', {
+      method: 'POST',
+      body: formData
+    });
+
+    if (tmpfilesRes.ok) {
+      const json = await tmpfilesRes.json();
+      if (json && json.status === 'success' && json.data && json.data.url) {
+        const directUrl = json.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
+        return res.json({ url: directUrl });
+      }
+    }
+
+    return res.status(500).json({ error: 'Failed to upload file to online storage.' });
+  } catch (err) {
+    console.error("Server upload API error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Fallback all other GET traffic to Vite's static index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));

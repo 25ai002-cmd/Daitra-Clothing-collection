@@ -581,67 +581,32 @@ export const db = {
   },
 
   async uploadFile(file) {
-    if (isCloudEnabled) {
-      try {
-        const bucketName = 'daitra_media';
-        const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-        
-        // Try creating the bucket first (will do nothing or error if it already exists, which we ignore)
-        await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
-          method: 'POST',
-          headers: getHeaders(),
-          body: JSON.stringify({
-            id: bucketName,
-            name: bucketName,
-            public: true,
-            file_size_limit: 52428800, // 50MB
-            allowed_mime_types: ['image/*', 'video/*']
-          })
-        });
-
-        // Upload the file to the bucket
-        const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucketName}/${fileName}`, {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            'Content-Type': file.type
-          },
-          body: file
-        });
-
-        if (uploadRes.ok) {
-          return `${SUPABASE_URL}/storage/v1/object/public/${bucketName}/${fileName}`;
-        } else {
-          const errText = await uploadRes.text();
-          console.error("Supabase storage upload failed:", errText);
-        }
-      } catch (err) {
-        console.error("Error uploading file to Supabase:", err);
-      }
-    }
-
-    // Fallback: If cloud is not enabled, or if it failed, we use tmpfiles.org uploader
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const res = await fetch('https://tmpfiles.org/api/v1/upload', {
+      // Proxy uploads through the backend server to avoid CORS blocks
+      const backendUrl = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
+        ? `http://localhost:10000/api/upload`
+        : `/api/upload`;
+
+      const response = await fetch(`${backendUrl}?filename=${encodeURIComponent(file.name)}`, {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': file.type
+        },
+        body: file
       });
-      
-      if (res.ok) {
-        const json = await res.json();
-        if (json && json.status === 'success' && json.data && json.data.url) {
-          // Replace tmpfiles view URL with the direct download URL
-          return json.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json && json.url) {
+          return json.url;
         }
+      } else {
+        const errText = await response.text();
+        console.error("Server upload endpoint failed:", errText);
       }
     } catch (err) {
-      console.error("Error uploading to tmpfiles.org:", err);
+      console.error("Error sending upload request to backend server:", err);
     }
-
     return null;
   }
 };
