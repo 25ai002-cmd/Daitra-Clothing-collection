@@ -169,21 +169,6 @@ export default function GoogleLoginModal({ isOpen, onClose, onLoginSuccess }) {
                   A secure official Google window will open. Please authenticate your Google account:
                 </p>
                 <div id="gsi-button-container" style={{ margin: '10px 0' }}></div>
-                
-                <div className="google-divider-row" style={{ width: '100%' }}>
-                  <span>or bypass authentication</span>
-                </div>
-                
-                <button 
-                  type="button" 
-                  className="google-account-item"
-                  style={{ width: '100%', justifyContent: 'center', borderStyle: 'dashed' }}
-                  onClick={() => handleSelectQuickAccount('yakshbarot597@gmail.com', 'Yaksh Barot')}
-                >
-                  <span style={{ fontSize: '0.85rem', fontWeight: '500', color: 'var(--primary-gold-dark)' }}>
-                    Bypass with Owner Account (Yaksh)
-                  </span>
-                </button>
               </div>
             ) : (
               /* Local Simulation View */

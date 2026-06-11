@@ -22,11 +22,16 @@ export default function BoutiqueAdmin() {
 
   // Catalog Management States
   const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
   const [upiId, setUpiId] = useState('daitracouture@okaxis');
   const [upiQrUrl, setUpiQrUrl] = useState('');
   
   const [newCatSlug, setNewCatSlug] = useState('');
   const [newCatName, setNewCatName] = useState('');
+  const [editingCatId, setEditingCatId] = useState(null);
+  const [editingCatName, setEditingCatName] = useState('');
+  const [dressSearchQuery, setDressSearchQuery] = useState('');
+  const [editingProductId, setEditingProductId] = useState(null);
   
   const [newProd, setNewProd] = useState({
     title: '',
@@ -86,6 +91,8 @@ export default function BoutiqueAdmin() {
       setUpiId(settings.upi_id || 'daitracouture@okaxis');
       setUpiQrUrl(settings.upi_qr_url || '');
     }
+    const prods = await db.getProducts();
+    setProducts(prods);
     // Set default category in form if categories loaded
     if (cats.length > 0 && !newProd.category) {
       setNewProd(prev => ({ ...prev, category: cats[0].id }));
@@ -282,7 +289,7 @@ export default function BoutiqueAdmin() {
     const imagesArray = [newProd.image.trim(), ...additionalImgs];
 
     const productObj = {
-      id: Date.now(),
+      id: editingProductId ? editingProductId : Date.now(),
       title: newProd.title.trim(),
       category: newProd.category,
       price: priceNum,
@@ -305,7 +312,16 @@ export default function BoutiqueAdmin() {
       inStock: true
     };
 
-    await db.saveProduct(productObj);
+    if (editingProductId) {
+      await db.updateProduct(productObj);
+      setEditingProductId(null);
+      setCatalogSuccess(`Dress "${productObj.title}" updated successfully!`);
+    } else {
+      await db.saveProduct(productObj);
+      setCatalogSuccess(`Dress "${productObj.title}" successfully added to catalog!`);
+    }
+
+    await loadCatalogData();
     
     // Reset product fields
     setNewProd({
@@ -329,8 +345,109 @@ export default function BoutiqueAdmin() {
     
     // Notify application that catalog items updated
     window.dispatchEvent(new Event('daitra_catalog_updated'));
+    setTimeout(() => setCatalogSuccess(''), 4000);
+  };
+
+  const handleEditProduct = (product) => {
+    // Scroll to the add dress card
+    const element = document.querySelector('.add-dress-card');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    setEditingProductId(product.id);
     
-    setCatalogSuccess(`Dress "${productObj.title}" successfully added to catalog!`);
+    let fabric = '';
+    let work = '';
+    let style = '';
+    let care = '';
+    
+    if (product.details && Array.isArray(product.details)) {
+      product.details.forEach(detail => {
+        if (detail.startsWith('Fabric:')) fabric = detail.replace('Fabric:', '').trim();
+        else if (detail.startsWith('Work:')) work = detail.replace('Work:', '').trim();
+        else if (detail.startsWith('Style:')) style = detail.replace('Style:', '').trim();
+        else if (detail.startsWith('Care Instructions:')) care = detail.replace('Care Instructions:', '').trim();
+      });
+    }
+
+    const additionalImagesStr = product.images && product.images.length > 1
+      ? product.images.slice(1).join(', ')
+      : '';
+
+    setNewProd({
+      title: product.title || '',
+      category: product.category || '',
+      price: product.price || '',
+      originalPrice: product.originalPrice || '',
+      discount: product.discount || '',
+      image: product.image || '',
+      additionalImages: additionalImagesStr,
+      video: product.video || '',
+      description: product.description || '',
+      material: product.material || '',
+      fabric: fabric,
+      work: work,
+      style: style,
+      care: care
+    });
+    
+    setProdSizes(product.sizes || []);
+    setProdTags(product.tags || []);
+  };
+
+  const handleCancelProductEdit = () => {
+    setEditingProductId(null);
+    setNewProd({
+      title: '',
+      category: categories[0]?.id || '',
+      price: '',
+      originalPrice: '',
+      discount: '',
+      image: '',
+      additionalImages: '',
+      video: '',
+      description: '',
+      material: '',
+      fabric: '',
+      work: '',
+      style: '',
+      care: ''
+    });
+    setProdSizes([]);
+    setProdTags([]);
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    if (window.confirm("Are you sure you want to delete this dress from the catalog? This action cannot be undone.")) {
+      await db.deleteProduct(productId);
+      await loadCatalogData();
+      window.dispatchEvent(new Event('daitra_catalog_updated'));
+      setCatalogSuccess("Dress successfully removed from the catalog!");
+      setTimeout(() => setCatalogSuccess(''), 4000);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (window.confirm("Are you sure you want to delete this category? All products in this category will remain, but the category filter will be removed.")) {
+      await db.deleteCategory(categoryId);
+      await loadCatalogData();
+      window.dispatchEvent(new Event('daitra_catalog_updated'));
+      setCatalogSuccess("Category deleted successfully!");
+      setTimeout(() => setCatalogSuccess(''), 4000);
+    }
+  };
+
+  const handleSaveCategoryEdit = async (categoryId) => {
+    if (!editingCatName.trim()) {
+      setCatalogError("Category name cannot be blank.");
+      return;
+    }
+    await db.updateCategory({ id: categoryId, name: editingCatName.trim() });
+    setEditingCatId(null);
+    await loadCatalogData();
+    window.dispatchEvent(new Event('daitra_catalog_updated'));
+    setCatalogSuccess("Category updated successfully!");
     setTimeout(() => setCatalogSuccess(''), 4000);
   };
 
@@ -367,6 +484,11 @@ export default function BoutiqueAdmin() {
                           o.status === parseInt(statusFilter);
 
     return matchesSearch && matchesStatus;
+  });
+
+  const filteredProducts = products.filter(p => {
+    const term = dressSearchQuery.toLowerCase();
+    return p.title.toLowerCase().includes(term) || p.category.toLowerCase().includes(term);
   });
 
   if (!isLoggedIn) {
@@ -780,10 +902,49 @@ export default function BoutiqueAdmin() {
 
               <div className="current-categories-list">
                 <h4>Active Catalog Sections:</h4>
-                <div className="categories-badges-row">
-                  {categories.map(c => (
-                    <span key={c.id} className="cat-badge-item">{c.name} ({c.id})</span>
-                  ))}
+                <div className="categories-badges-grid" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '10px' }}>
+                  {categories.map(c => {
+                    const isEditing = editingCatId === c.id;
+                    return (
+                      <div key={c.id} className="cat-badge-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'var(--bg-light)', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
+                        {isEditing ? (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <input 
+                              type="text" 
+                              value={editingCatName} 
+                              onChange={(e) => setEditingCatName(e.target.value)} 
+                              style={{ padding: '2px 6px', background: 'var(--bg-dark)', border: '1px solid var(--border-color)', color: 'white', fontSize: '0.8rem', borderRadius: '4px', width: '120px' }}
+                              autoFocus
+                            />
+                            <button type="button" onClick={() => handleSaveCategoryEdit(c.id)} style={{ padding: '2px 6px', background: 'var(--primary-gold)', color: 'black', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>Save</button>
+                            <button type="button" onClick={() => setEditingCatId(null)} style={{ padding: '2px 6px', background: '#333', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}>Cancel</button>
+                          </div>
+                        ) : (
+                          <>
+                            <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{c.name} ({c.id})</span>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <button 
+                                type="button" 
+                                onClick={() => { setEditingCatId(c.id); setEditingCatName(c.name); }} 
+                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--primary-gold)', padding: '0 4px' }}
+                              >
+                                Edit
+                              </button>
+                              {c.id !== 'kurtas' && c.id !== 'gowns' && c.id !== 'fusion' && (
+                                <button 
+                                  type="button" 
+                                  onClick={() => handleDeleteCategory(c.id)} 
+                                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: '#ff4d4d', padding: '0 4px' }}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -1044,11 +1205,83 @@ export default function BoutiqueAdmin() {
                   </div>
                 </div>
 
-                <button type="submit" className="btn btn-gold add-dress-submit-btn">
-                  ADD DRESS TO CATALOG
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" className="btn btn-gold add-dress-submit-btn" style={{ flex: 1 }}>
+                    {editingProductId ? 'SAVE DRESS CHANGES' : 'ADD DRESS TO CATALOG'}
+                  </button>
+                  {editingProductId && (
+                    <button type="button" onClick={handleCancelProductEdit} className="btn btn-dark" style={{ flex: 1, textTransform: 'uppercase' }}>
+                      CANCEL EDIT
+                    </button>
+                  )}
+                </div>
               </div>
             </form>
+          </div>
+
+          {/* Active Dress Catalog */}
+          <div className="catalog-settings-card catalog-list-card" style={{ marginTop: '20px' }}>
+            <div className="card-title-row">
+              <Package size={18} className="gold-text" />
+              <h3>Active Dress Catalog ({products.length})</h3>
+            </div>
+            
+            {/* Search filter for products */}
+            <div className="catalog-search-row" style={{ marginBottom: '15px' }}>
+              <div className="search-input-wrapper" style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-dark)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '6px 12px', width: 'fit-content' }}>
+                <Search size={14} className="search-icon" style={{ color: '#888', marginRight: '8px' }} />
+                <input
+                  type="text"
+                  placeholder="Search dresses by title or category..."
+                  value={dressSearchQuery}
+                  onChange={(e) => setDressSearchQuery(e.target.value)}
+                  className="search-input"
+                  style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '250px', fontSize: '0.85rem' }}
+                />
+              </div>
+            </div>
+
+            <div className="catalog-dresses-list-wrapper" style={{ maxHeight: '500px', overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px' }}>
+              {filteredProducts.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No dresses found.</p>
+              ) : (
+                <table className="admin-orders-table" style={{ width: '100%', borderCollapse: 'collapse', margin: 0 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ padding: '12px' }}>Image</th>
+                      <th style={{ padding: '12px' }}>Title</th>
+                      <th style={{ padding: '12px' }}>Category</th>
+                      <th style={{ padding: '12px' }}>Price</th>
+                      <th style={{ padding: '12px' }}>In Stock</th>
+                      <th style={{ padding: '12px' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map(p => (
+                      <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                        <td style={{ padding: '12px' }}>
+                          <img src={p.image} alt={p.title} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                        </td>
+                        <td className="bold-text" style={{ padding: '12px' }}>{p.title}</td>
+                        <td style={{ textTransform: 'capitalize', padding: '12px' }}>{p.category}</td>
+                        <td className="gold-text bold-text" style={{ padding: '12px' }}>₹{p.price.toLocaleString('en-IN')}</td>
+                        <td style={{ padding: '12px' }}>{p.inStock ? 'Yes' : 'No'}</td>
+                        <td style={{ padding: '12px' }}>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button type="button" className="btn-table-action" onClick={() => handleEditProduct(p)} style={{ padding: '4px 8px', fontSize: '0.75rem' }} title="Edit dress details">
+                              <span>Edit</span>
+                            </button>
+                            <button type="button" className="btn-table-action" onClick={() => handleDeleteProduct(p.id)} style={{ padding: '4px 8px', fontSize: '0.75rem', background: '#ffebeb', color: '#ff4d4d', borderColor: '#ff4d4d' }} title="Delete dress">
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         </div>
       )}

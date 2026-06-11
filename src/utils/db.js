@@ -157,16 +157,16 @@ export const db = {
     
     // LocalStorage Fallback
     const saved = localStorage.getItem('daitra_db_products');
-    if (saved) {
+    const dbVersion = localStorage.getItem('daitra_db_version');
+    if (saved && dbVersion === 'v2_89_products') {
       const parsed = JSON.parse(saved);
-      // Migration v2: Re-seed if still using old /assets/ image paths (switch to /dresses/ real photos)
       const isOldData = parsed.length > 0 && parsed[0].image && parsed[0].image.startsWith('/assets/');
-      const isCorrectCount = parsed.length >= seedProducts.length;
-      if (!isOldData && parsed.length > 0 && parsed[0].material && isCorrectCount) {
+      if (!isOldData && parsed.length > 0 && parsed[0].material) {
         return parsed;
       }
     }
     localStorage.setItem('daitra_db_products', JSON.stringify(seedProducts));
+    localStorage.setItem('daitra_db_version', 'v2_89_products');
     return seedProducts;
   },
 
@@ -463,5 +463,97 @@ export const db = {
     const updated = [review, ...reviews];
     localStorage.setItem('daitra_reviews', JSON.stringify(updated));
     return review;
+  },
+
+  async deleteProduct(productId) {
+    if (isCloudEnabled) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/daitra_products?id=eq.${productId}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        if (!res.ok) {
+          console.error("Failed to delete product from Supabase");
+        }
+      } catch (err) {
+        console.error("Error deleting product from Supabase:", err);
+      }
+    }
+
+    // LocalStorage Fallback
+    const prods = await this.getProducts();
+    const updated = prods.filter(p => p.id !== productId);
+    localStorage.setItem('daitra_db_products', JSON.stringify(updated));
+    return true;
+  },
+
+  async updateProduct(product) {
+    if (isCloudEnabled) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/daitra_products?id=eq.${product.id}`, {
+          method: 'PATCH',
+          headers: getHeaders(),
+          body: JSON.stringify(product)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data[0];
+        }
+      } catch (err) {
+        console.error("Error updating product in Supabase:", err);
+      }
+    }
+
+    // LocalStorage Fallback
+    const prods = await this.getProducts();
+    const updated = prods.map(p => p.id === product.id ? product : p);
+    localStorage.setItem('daitra_db_products', JSON.stringify(updated));
+    return product;
+  },
+
+  async deleteCategory(categoryId) {
+    if (isCloudEnabled) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/daitra_categories?id=eq.${categoryId}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        if (!res.ok) {
+          console.error("Failed to delete category from Supabase");
+        }
+      } catch (err) {
+        console.error("Error deleting category from Supabase:", err);
+      }
+    }
+
+    // LocalStorage Fallback
+    const cats = await this.getCategories();
+    const updated = cats.filter(c => c.id !== categoryId);
+    localStorage.setItem('daitra_db_categories', JSON.stringify(updated));
+    return true;
+  },
+
+  async updateCategory(category) {
+    if (isCloudEnabled) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/daitra_categories?id=eq.${category.id}`, {
+          method: 'PATCH',
+          headers: getHeaders(),
+          body: JSON.stringify(category)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          return data[0];
+        }
+      } catch (err) {
+        console.error("Error updating category in Supabase:", err);
+      }
+    }
+
+    // LocalStorage Fallback
+    const cats = await this.getCategories();
+    const updated = cats.map(c => c.id === category.id ? category : c);
+    localStorage.setItem('daitra_db_categories', JSON.stringify(updated));
+    return category;
   }
 };

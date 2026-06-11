@@ -29,6 +29,7 @@ export default function App() {
   const [toast, setToast] = useState({ visible: false, title: '', size: '', image: '' });
   const [copiedMessage, setCopiedMessage] = useState(false);
   const [showWishlistOnly, setShowWishlistOnly] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
 
   const [productsList, setProductsList] = useState([]);
   const [categoriesList, setCategoriesList] = useState([]);
@@ -133,6 +134,24 @@ export default function App() {
     const cats = await db.getCategories();
     setCategoriesList(cats);
   };
+
+  const checkPurchaseStatus = async () => {
+    const orders = await db.getOrders();
+    if (user) {
+      const userHasOrder = orders.some(o => o.customerEmail?.toLowerCase() === user.email.toLowerCase());
+      setHasPurchased(userHasOrder);
+    } else {
+      setHasPurchased(orders.length > 0);
+    }
+  };
+
+  useEffect(() => {
+    checkPurchaseStatus();
+    window.addEventListener('daitra_new_order_placed', checkPurchaseStatus);
+    return () => {
+      window.removeEventListener('daitra_new_order_placed', checkPurchaseStatus);
+    };
+  }, [user]);
 
   // Synchronize cart and wishlist whenever user session state changes
   useEffect(() => {
@@ -568,6 +587,7 @@ export default function App() {
         onClearCart={handleClearCart}
         user={user}
         onLoginOpen={() => setGoogleLoginOpen(true)}
+        hasPurchased={hasPurchased}
       />
 
       {/* Custom Premium Toast Notification */}
@@ -586,13 +606,15 @@ export default function App() {
       )}
 
       {/* Floating Interactive Coupon Ribbon */}
-      <div className="floating-coupon-widget" onClick={handleCopyCoupon} title="Click to copy coupon code">
-        <div className="coupon-emoji">🏷️</div>
-        <div className="coupon-widget-content">
-          <span className="coupon-widget-tag">FIRST PURCHASE</span>
-          <strong className="coupon-widget-code">{copiedMessage ? 'COPIED! 🎉' : 'WELCOME10'}</strong>
+      {!hasPurchased && (
+        <div className="floating-coupon-widget" onClick={handleCopyCoupon} title="Click to copy coupon code">
+          <div className="coupon-emoji">🏷️</div>
+          <div className="coupon-widget-content">
+            <span className="coupon-widget-tag">FIRST PURCHASE</span>
+            <strong className="coupon-widget-code">{copiedMessage ? 'COPIED! 🎉' : 'WELCOME10'}</strong>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Google Login Dialog */}
       <GoogleLoginModal

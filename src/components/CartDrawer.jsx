@@ -12,7 +12,8 @@ export default function CartDrawer({
   onRemoveItem,
   onClearCart,
   user,
-  onLoginOpen
+  onLoginOpen,
+  hasPurchased
 }) {
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart' | 'form' | 'success'
   const [promoCode, setPromoCode] = useState('');
@@ -108,7 +109,17 @@ export default function CartDrawer({
 
   const handleApplyPromoClick = (codeToApply) => {
     const code = codeToApply.trim().toUpperCase();
-    if (code === 'DAITRA10' || code === 'WELCOME10') {
+    if (code === 'WELCOME10') {
+      if (hasPurchased) {
+        setPromoError('This promo code is only valid for your first purchase.');
+        setPromoSuccess('');
+        setAppliedDiscount(0);
+        return;
+      }
+      setAppliedDiscount(10);
+      setPromoSuccess('Promo code applied successfully! 10% OFF');
+      setPromoError('');
+    } else if (code === 'DAITRA10') {
       setAppliedDiscount(10);
       setPromoSuccess('Promo code applied successfully! 10% OFF');
       setPromoError('');
@@ -310,7 +321,9 @@ export default function CartDrawer({
                   </div>
                   <div className="promo-quick-tags">
                     <span>Click to apply:</span>
-                    <button type="button" className="promo-tag-btn" onClick={() => { setPromoCode('WELCOME10'); handleApplyPromoClick('WELCOME10'); }}>WELCOME10</button>
+                    {!hasPurchased && (
+                      <button type="button" className="promo-tag-btn" onClick={() => { setPromoCode('WELCOME10'); handleApplyPromoClick('WELCOME10'); }}>WELCOME10</button>
+                    )}
                     <button type="button" className="promo-tag-btn" onClick={() => { setPromoCode('DAITRA10'); handleApplyPromoClick('DAITRA10'); }}>DAITRA10</button>
                   </div>
                   {promoError && <p className="promo-error">{promoError}</p>}
