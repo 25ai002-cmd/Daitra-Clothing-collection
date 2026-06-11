@@ -9,7 +9,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 21,
     image: "/dresses/1.jpg",
-    images: ["/dresses/1.jpg", "/dresses/2.jpg", "/dresses/6.jpg"],
+    images: ["/dresses/1.jpg"],
     description: "A timeless navy blue midi dress adorned with delicate ivory sunflower prints. Features a classic round-neck with pearl-button placket, cinched waist tie-up, and a graceful A-line silhouette — perfect for festive gatherings and casual elegance alike.",
     material: "Crafted from premium cambric cotton with a smooth, breathable weave. The sunflower appliqué detailing is hand-finished for a refined boutique aesthetic.",
     details: [
@@ -32,7 +32,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 17,
     image: "/dresses/2.jpg",
-    images: ["/dresses/2.jpg", "/dresses/1.jpg", "/dresses/6.jpg"],
+    images: ["/dresses/2.jpg"],
     description: "Elegant navy blue shirt dress featuring an all-over delicate pine tree motif print. Designed with a classic collar, short sleeves, front button placket, waist tie, and deep pockets — a versatile everyday statement.",
     material: "100% soft mulmul cotton with a lightweight woven texture. Extremely breathable and ideal for warm climates.",
     details: [
@@ -55,7 +55,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 18,
     image: "/dresses/3.jpg",
-    images: ["/dresses/3.jpg", "/dresses/4.jpg", "/dresses/8.jpg"],
+    images: ["/dresses/3.jpg"],
     description: "Bold and artistic — this floor-length dress features a striking navy and red medallion grid print. The flowy A-line silhouette with a waist belt creates a regal, fashion-forward look inspired by Indian ikat weaves.",
     material: "Premium cotton-rayon blend offering the breathability of cotton with the smooth drape of rayon. Allover bold medallion prints are screen-printed for lasting vibrancy.",
     details: [
@@ -78,7 +78,7 @@ export const products = [
     rating: 4.8,
     reviewsCount: 14,
     image: "/dresses/4.jpg",
-    images: ["/dresses/4.jpg", "/dresses/3.jpg", "/dresses/7.jpg"],
+    images: ["/dresses/4.jpg"],
     description: "Earthy tones meet ethnic craftsmanship in this chakra-print midi dress. The all-over mandala motif is inspired by traditional Ajrakh block printing on a warm beige-red base, giving a heritage feel with modern flare.",
     material: "Soft muslin cotton with deep earth-toned natural dyes and block-printed mandala patterns. Comfortable full-day wear with side pockets.",
     details: [
@@ -101,7 +101,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 26,
     image: "/dresses/5.jpg",
-    images: ["/dresses/5.jpg", "/dresses/10.jpg", "/dresses/9.jpg"],
+    images: ["/dresses/5.jpg"],
     description: "A captivating navy blue V-neck maxi with allover white mandala and floral block print. Features tassel accents at the V, tiered ruffle hem for 360° flare, and a deeply feminine silhouette for all-day elegance.",
     material: "Crafted from double-layered crinkle cotton that lends the dress a beautiful movement. Soft on the skin and completely breathable for warm Indian summers.",
     details: [
@@ -124,7 +124,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 19,
     image: "/dresses/6.jpg",
-    images: ["/dresses/6.jpg", "/dresses/1.jpg", "/dresses/2.jpg"],
+    images: ["/dresses/6.jpg"],
     description: "A structured yet feminine navy midi shirt dress with a wooden ring belt. Features chest patch pockets, contrast stitch detailing, classic collar, and half-sleeves — a perfect blend of utility and couture.",
     material: "Heavyweight linen-cotton blend with a crisp drape. Contrast stitching is hand-applied for a bespoke boutique finish.",
     details: [
@@ -147,7 +147,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 22,
     image: "/dresses/7.jpg",
-    images: ["/dresses/7.jpg", "/dresses/4.jpg", "/dresses/8.jpg"],
+    images: ["/dresses/7.jpg"],
     description: "A feminine blush pink midi dress with allover dark navy mandala chakra prints, giving a rich contrast look. Button-down front, waist tie, and light flare make this a gorgeous choice for both casual and festive occasions.",
     material: "Soft modal-cotton blend with vivid mandala block prints. Exceptionally soft, light, and easy to drape for an all-day elegant look.",
     details: [
@@ -170,7 +170,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 31,
     image: "/dresses/8.jpg",
-    images: ["/dresses/8.jpg", "/dresses/3.jpg", "/dresses/7.jpg"],
+    images: ["/dresses/8.jpg"],
     description: "Vibrant mustard yellow and teal grid-mandala print in a flowing A-line silhouette. Daitra's signature Ajrakh-inspired blockprint is featured in every panel of this stunning, culture-rich midi dress.",
     material: "Premium cambric cotton with intricate Ajrakh-inspired block printing. Slight sheen on the fabric gives a festive, dressy quality.",
     details: [
@@ -195,7 +195,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 28,
     image: "/dresses/9.jpg",
-    images: ["/dresses/9.jpg", "/dresses/10.jpg", "/dresses/16.jpg"],
+    images: ["/dresses/9.jpg"],
     description: "A stunning ivory co-ord set featuring an all-over delicate floral print. The breezy top pairs with matching wide-leg pants for an effortless indo-western fusion look. Perfect for brunch, events, or evening outings.",
     material: "Light georgette-cotton blend with floral digital print. The soft drape of georgette gives it a high-fashion, flowy silhouette.",
     details: [
@@ -218,7 +218,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 24,
     image: "/dresses/10.jpg",
-    images: ["/dresses/10.jpg", "/dresses/9.jpg", "/dresses/5.jpg"],
+    images: ["/dresses/10.jpg"],
     description: "Breathtaking aqua-teal maxi dress with large floral print in muted lavender and dusty blue tones. A beaded neckline adds a touch of luxury, and the tiered A-line silhouette gives a graceful, bohemian flow.",
     material: "Flowy rayon-georgette with vivid floral digital print. Double-layered for opacity while maintaining a lightweight, airy feel.",
     details: [
