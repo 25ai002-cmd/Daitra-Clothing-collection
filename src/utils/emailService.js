@@ -173,14 +173,14 @@ async function directBrevoSend(order, recipientType) {
           <p style="font-size: 14px; line-height: 1.6; color: #555555;">You have received a new customer order on your website dashboard. Below are the order receipt and payment parameters for fulfillment.</p>
         `));
 
-  const ctaHtml = recipientType === 'customer'
+  const ctaHtml = (recipientType === 'customer' && !isCancelled)
     ? `
       <!-- Track & Cancel Order CTA -->
       <div style="margin: 25px 30px; text-align: center;">
         <a href="${websiteUrl}#/track/${order.orderId}" style="display: inline-block; padding: 12px 24px; border-radius: 4px; font-size: 14px; font-weight: bold; background-color: #0b0b0b; border: 1.5px solid #D4AF37; color: #D4AF37; text-decoration: none; margin: 5px; text-transform: uppercase; letter-spacing: 1px;">
           Track Order Details
         </a>
-        ${(order.status < 4 && !isCancelled) ? `
+        ${(order.status < 4) ? `
           <a href="${websiteUrl}#/track/${order.orderId}?cancel=true" style="display: inline-block; padding: 12px 24px; border-radius: 4px; font-size: 14px; font-weight: bold; background-color: #721c24; border: 1.5px solid #f5c6cb; color: #f8d7da; text-decoration: none; margin: 5px; text-transform: uppercase; letter-spacing: 1px;">
             Cancel Order
           </a>

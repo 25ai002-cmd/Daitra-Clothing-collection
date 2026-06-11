@@ -112,7 +112,8 @@ export default async function handler(req, res) {
           <p style="font-size: 14px; line-height: 1.6; color: #555555;">You have received a new customer order on your website dashboard. Below are the order receipt and payment parameters for fulfillment.</p>
         `);
 
-    const ctaHtml = recipientType === 'customer'
+    const isCancelled = order.status === 5;
+    const ctaHtml = (recipientType === 'customer' && !isCancelled)
       ? `
         <!-- Track & Cancel Order CTA -->
         <div style="margin: 25px 30px; text-align: center;">
