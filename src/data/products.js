@@ -241,7 +241,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 16,
     image: "/dresses/20.jpg",
-    images: ["/dresses/20.jpg", "/dresses/21.jpg", "/dresses/22.jpg"],
+    images: ["/dresses/20.jpg"],
     description: "Earthy sage green button-down shirt set with floral embroidered patch pockets and a classic collar. Paired with straight-cut cigarette pants for a polished, contemporary co-ord look — perfect for office and casual outings.",
     material: "Premium tencel fabric with floral embroidery on patch pockets and placket trim. Comfortable, anti-wrinkle, and breathable.",
     details: [
@@ -264,7 +264,7 @@ export const products = [
     rating: 4.8,
     reviewsCount: 12,
     image: "/dresses/30.jpg",
-    images: ["/dresses/30.jpg", "/dresses/29.jpg", "/dresses/31.jpg"],
+    images: ["/dresses/30.jpg"],
     description: "Bold, artistic, and avant-garde — this black and white abstract face-print co-ord set with wide palazzo pants makes a dramatic style statement. A collector's piece for the fashion-forward woman.",
     material: "Smooth viscose blend with high-contrast abstract digital print. The fabric has a subtle sheen that catches light beautifully.",
     details: [
@@ -287,7 +287,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 20,
     image: "/dresses/45.jpg",
-    images: ["/dresses/45.jpg", "/dresses/44.jpg", "/dresses/46.jpg"],
+    images: ["/dresses/45.jpg"],
     description: "A soft rose-pink kurti with delicate white ginkgo leaf embroidery on front and hemline. Comes with matching crochet-trimmed straight pants and a V-neck with tassel accents for a breezy, elegant look.",
     material: "Premium cotton with white thread embroidery on ginkgo motifs. Crochet lace hem adds a handcrafted, artisanal quality.",
     details: [
@@ -310,7 +310,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 33,
     image: "/dresses/60.jpg",
-    images: ["/dresses/60.jpg", "/dresses/61.jpg", "/dresses/62.jpg"],
+    images: ["/dresses/60.jpg"],
     description: "Majestic navy Anarkali gown with rich gold zari border and an exquisite ivory Banarasi-weave dupatta. The deep V-neck with pendant charm and full-length flared silhouette make this an heirloom-quality festive ensemble.",
     material: "Forged in ultra-soft art silk with a gold zari woven hem and border. Dupatta is a hand-finished Banarasi-weave with intricate gold thread motifs.",
     details: [
@@ -333,7 +333,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 18,
     image: "/dresses/75.jpg",
-    images: ["/dresses/75.jpg", "/dresses/74.jpg", "/dresses/76.jpg"],
+    images: ["/dresses/75.jpg"],
     description: "A dream in ivory — this printed sharara set features a round-neck embroidered kurta with blue floral print and matching wide-flare sharara pants with a dupatta. A complete festive ensemble that radiates grace.",
     material: "Chiffon-cotton blend with blue floral digital print. The sharara flare is reinforced with inner lining for structured volume.",
     details: [
@@ -356,7 +356,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 27,
     image: "/dresses/89.jpg",
-    images: ["/dresses/89.jpg", "/dresses/88.jpg", "/dresses/87.jpg"],
+    images: ["/dresses/89.jpg"],
     description: "Chic, dramatic, and effortlessly stylish — this jet-black camisole kurta features delicate mirror work and abstract white border prints. Paired with matching wide-leg palazzo pants for a bold, modern ethnic look.",
     material: "Smooth matte cotton-silk blend with hand-applied mirror work accents and ikat border prints. Extremely comfortable for evening wear.",
     details: [
@@ -379,7 +379,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 15,
     image: "/dresses/11.jpg",
-    images: ["/dresses/11.jpg", "/dresses/12.jpg", "/dresses/13.jpg"],
+    images: ["/dresses/11.jpg"],
     description: "An exquisite Ajrakh-inspired blue and white flared maxi dress with paisley and floral motifs throughout. The graceful A-line silhouette, round neck, and 3/4 sleeves create an ideal blend of traditional and contemporary styling.",
     material: "Soft cotton with Ajrakh block print. The fabric is pre-washed for softness and the natural indigo dye has excellent color retention.",
     details: [
@@ -402,7 +402,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 23,
     image: "/dresses/14.jpg",
-    images: ["/dresses/14.jpg", "/dresses/15.jpg", "/dresses/16.jpg"],
+    images: ["/dresses/14.jpg"],
     description: "Traditional Bandhani tie-dye patterns in rich teal and golden hues on a graceful floor-length dress. A cultural masterpiece that blends Gujarat's iconic textile art with a contemporary, wearable silhouette.",
     material: "Pure Bandhani cotton fabric with genuine tie-dye technique. Each piece has slight natural variations, making every garment unique.",
     details: [
@@ -425,7 +425,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 19,
     image: "/dresses/17.jpg",
-    images: ["/dresses/17.jpg", "/dresses/18.jpg", "/dresses/19.jpg"],
+    images: ["/dresses/17.jpg"],
     description: "Rich maroon cotton kurti with dense white thread embroidery on the yoke and sleeves. Paired with matching cotton straight pants — a perfect ensemble for daily work, festivals, or family occasions.",
     material: "Heavy-weight slub cotton with hand-done white chikankari-style embroidery on the yoke. The fabric is pre-shrunk and color-fast.",
     details: [
@@ -448,7 +448,7 @@ export const products = [
     rating: 4.8,
     reviewsCount: 14,
     image: "/dresses/23.jpg",
-    images: ["/dresses/23.jpg", "/dresses/24.jpg", "/dresses/25.jpg"],
+    images: ["/dresses/23.jpg"],
     description: "Soft dusty pink ethnic kurta with allover delicate block-printed motifs in coordinating ivory. Paired with matching bottoms, this set is the ideal go-to for everyday graceful wear.",
     material: "Breathable muslin cotton with fine block print. The color palette is soft and muted for a sophisticated, understated look.",
     details: [
@@ -471,7 +471,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 21,
     image: "/dresses/26.jpg",
-    images: ["/dresses/26.jpg", "/dresses/27.jpg", "/dresses/28.jpg"],
+    images: ["/dresses/26.jpg"],
     description: "The artisan's pride — a stunning peacock blue A-line maxi in classic Kalamkari fabric. Rich flora and fauna motifs in earthy rust and ivory create a museum-worthy ethnic statement for weddings and cultural events.",
     material: "Authentic Kalamkari cotton fabric with pen-drawn and block-printed motifs in natural vegetable dyes. Each piece is a unique artisan work.",
     details: [
@@ -494,7 +494,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 16,
     image: "/dresses/32.jpg",
-    images: ["/dresses/32.jpg", "/dresses/33.jpg", "/dresses/34.jpg"],
+    images: ["/dresses/32.jpg"],
     description: "Warm terracotta tones with scattered floral prints in a beautifully draped, pleated midi dress. The A-line silhouette with a subtle waist gather gives a flattering feminine shape for all body types.",
     material: "Cotton-rayon blend with digital floral print and pleated front detailing. The fabric has a beautiful matte finish.",
     details: [
@@ -517,7 +517,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 25,
     image: "/dresses/35.jpg",
-    images: ["/dresses/35.jpg", "/dresses/36.jpg", "/dresses/37.jpg"],
+    images: ["/dresses/35.jpg"],
     description: "Inspired by Mughal garden architecture — this indigo blue dress features a dense jaal (net) pattern with fine gold outline block print. The ethereal, intricate design makes it perfect for festive and wedding occasions.",
     material: "Chanderi blend cotton with traditional jaal block print in indigo and gold. The fabric has a slight tissue-like sheen typical of premium Chanderi.",
     details: [
@@ -540,7 +540,7 @@ export const products = [
     rating: 4.8,
     reviewsCount: 11,
     image: "/dresses/38.jpg",
-    images: ["/dresses/38.jpg", "/dresses/39.jpg", "/dresses/40.jpg"],
+    images: ["/dresses/38.jpg"],
     description: "A chic, earthy olive green shirt-style tunic with allover scattered floral print. Paired with matching straight-fit pants, this set gives a put-together, refined office-to-evening look.",
     material: "Linen-cotton blend with delicate floral print and a relaxed drape. The olive green hue is derived from natural pigments for a rich, muted tone.",
     details: [
@@ -563,7 +563,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 18,
     image: "/dresses/41.jpg",
-    images: ["/dresses/41.jpg", "/dresses/42.jpg", "/dresses/43.jpg"],
+    images: ["/dresses/41.jpg"],
     description: "Vibrant coral-orange ethnic kurti set with allover traditional block print motifs in navy and white. A timeless, festive-ready silhouette that celebrates the craft of Rajasthani hand block printing.",
     material: "Premium pure cotton with Rajasthani hand block print. The fabric is hand-washed before stitching for a perfect pre-shrunk fit.",
     details: [
@@ -586,7 +586,7 @@ export const products = [
     rating: 4.8,
     reviewsCount: 13,
     image: "/dresses/47.jpg",
-    images: ["/dresses/47.jpg", "/dresses/48.jpg", "/dresses/49.jpg"],
+    images: ["/dresses/47.jpg"],
     description: "Serene pastel blue midi dress with delicate pintuck pleating on the bodice and fine white embroidery at the neckline. A quiet, understated elegance for daytime events, office wear, or festive occasions.",
     material: "Soft chambray cotton with pre-set pintuck pleats. Neckline features fine cotton thread embroidery for a handcrafted touch.",
     details: [
@@ -609,7 +609,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 22,
     image: "/dresses/50.jpg",
-    images: ["/dresses/50.jpg", "/dresses/51.jpg", "/dresses/52.jpg"],
+    images: ["/dresses/50.jpg"],
     description: "A bold, artistic statement in woven ikat pattern — this burnt orange and deep brown A-line midi dress celebrates the ancient ikat weaving tradition of Odisha and Gujarat with a modern, contemporary silhouette.",
     material: "Double ikat woven cotton fabric with authentic warp-and-weft dye technique. Each dress is slightly unique due to the handloom weaving process.",
     details: [
@@ -632,7 +632,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 20,
     image: "/dresses/53.jpg",
-    images: ["/dresses/53.jpg", "/dresses/54.jpg", "/dresses/55.jpg"],
+    images: ["/dresses/53.jpg"],
     description: "Float into elegance with this sky blue tiered ruffle dress. Multiple layers of light georgette create a dreamy, voluminous floor-length look. Perfect for garden parties, receptions, and festive evenings.",
     material: "Four-layer georgette chiffon with ruffled tiers. Each tier is hand-finished for an even, voluminous flare.",
     details: [
@@ -655,7 +655,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 29,
     image: "/dresses/56.jpg",
-    images: ["/dresses/56.jpg", "/dresses/57.jpg", "/dresses/58.jpg"],
+    images: ["/dresses/56.jpg"],
     description: "A breathtaking lavender Anarkali gown in pure silk with bold floral print in ivory and green. The floor-sweeping silhouette with a belted waist and dupatta creates a bridal reception-worthy look of pure elegance.",
     material: "Pure art silk with allover floral digital print. Belted waist for shaping and a matching silk dupatta with gold hem border.",
     details: [
@@ -678,7 +678,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 17,
     image: "/dresses/63.jpg",
-    images: ["/dresses/63.jpg", "/dresses/64.jpg", "/dresses/65.jpg"],
+    images: ["/dresses/63.jpg"],
     description: "Effortlessly chic sage green coord set with a subtle floral print kurta and matching straight pants. A comfortable, stylish ensemble ideal for office wear, casual outings, and family get-togethers.",
     material: "Linen-cotton blend with fine floral print in muted tones. The fabric is pre-washed for a soft, broken-in feel right from the first wear.",
     details: [
@@ -701,7 +701,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 35,
     image: "/dresses/66.jpg",
-    images: ["/dresses/66.jpg", "/dresses/67.jpg", "/dresses/68.jpg"],
+    images: ["/dresses/66.jpg"],
     description: "The crown jewel of Daitra's gown collection — a midnight navy Anarkali in premium georgette with dense zari work on the bodice, sleeves, and hem. Accompanied by a sequin-bordered dupatta, this is pure couture elegance.",
     material: "Heavy micro-georgette with hand-applied zari work on bodice and hem. Sequin dupatta is double-layered organza with fine zari border.",
     details: [
@@ -724,7 +724,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 22,
     image: "/dresses/69.jpg",
-    images: ["/dresses/69.jpg", "/dresses/70.jpg", "/dresses/71.jpg"],
+    images: ["/dresses/69.jpg"],
     description: "A refreshingly pure white and blue floral sharara set with a beautifully printed kurti, wide-flare sharara pants, and matching dupatta. An ideal festive ensemble that radiates grace and tradition.",
     material: "Soft chinon fabric with digital floral print. The sharara flare is reinforced with inner lining for structured volume.",
     details: [
@@ -747,7 +747,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 28,
     image: "/dresses/72.jpg",
-    images: ["/dresses/72.jpg", "/dresses/73.jpg", "/dresses/74.jpg"],
+    images: ["/dresses/72.jpg"],
     description: "Opulent brick red Banarasi brocade kurti with golden woven motifs throughout. This festive piece is paired with matching straight pants and is perfect for Navratri, Diwali, and wedding celebrations.",
     material: "Banarasi silk blend fabric with self-woven gold brocade motifs throughout. The fabric has a rich, heavy drape typical of premium Banarasi weaves.",
     details: [
@@ -770,7 +770,7 @@ export const products = [
     rating: 4.8,
     reviewsCount: 16,
     image: "/dresses/78.jpg",
-    images: ["/dresses/78.jpg", "/dresses/79.jpg", "/dresses/80.jpg"],
+    images: ["/dresses/78.jpg"],
     description: "A vibrant celebration of color — this multicolor geometric block-print maxi dress features bold chevron and diamond patterns in traditional Rajasthani block-print technique. Flared silhouette, side pockets, and comfort waist.",
     material: "100% khadi cotton with hand block geometric prints. The fabric becomes softer with each wash while retaining its vivid colors.",
     details: [
@@ -793,7 +793,7 @@ export const products = [
     rating: 5.0,
     reviewsCount: 24,
     image: "/dresses/81.jpg",
-    images: ["/dresses/81.jpg", "/dresses/82.jpg", "/dresses/83.jpg"],
+    images: ["/dresses/81.jpg"],
     description: "Luxurious teal cotton kurti with intricate white chikankari embroidery on the yoke and collar. Paired with matching palazzo pants for a graceful, premium look — suitable for daytime events and festive occasions.",
     material: "Premium cotton with dense chikankari hand embroidery. The fabric has a high thread count for a smooth, polished finish.",
     details: [
@@ -816,7 +816,7 @@ export const products = [
     rating: 4.9,
     reviewsCount: 19,
     image: "/dresses/84.jpg",
-    images: ["/dresses/84.jpg", "/dresses/85.jpg", "/dresses/86.jpg"],
+    images: ["/dresses/84.jpg"],
     description: "Artisan crafted olive green ikat weave coord set with traditional ikat patterns in contrasting cream and rust. The shirt-style tunic with folded sleeves pairs with matching straight pants for a polished, handloom look.",
     material: "Single ikat woven cotton with olive and cream color thread work. Authentic handloom product from artisan clusters of Kutch.",
     details: [
