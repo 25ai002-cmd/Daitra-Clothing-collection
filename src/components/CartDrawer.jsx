@@ -229,6 +229,7 @@ export default function CartDrawer({
     setAppliedDiscount(0);
     setPromoSuccess('');
     setPaymentWarning('');
+    setShowPlacedPopup(false);
     onClose();
   };
 
@@ -628,7 +629,7 @@ export default function CartDrawer({
               <h3>Order Placed!</h3>
             </div>
             <div className="popup-body">
-              <p>Your order has been placed successfully. All details of your order have been sent to your email (<strong>{formData.email}</strong>).</p>
+              <p>Your order has been placed successfully. All details of your order have been sent to your email{formData.email ? <> <strong>{formData.email}</strong></> : ''}.</p>
             </div>
             <div className="popup-footer">
               <button className="btn btn-gold popup-close-btn" onClick={handleContinueShopping}>
