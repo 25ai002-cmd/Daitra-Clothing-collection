@@ -260,7 +260,7 @@ export default function CartDrawer({
             <ShoppingBag size={64} strokeWidth={1} className="empty-icon" />
             <h4>Your shopping bag is empty</h4>
             <p>Fill it with traditional grace from our premium catalog.</p>
-            <button className="btn btn-gold continue-btn" onClick={onClose}>
+            <button className="btn btn-gold continue-btn" onClick={() => { window.location.hash = '#/shop'; onClose(); }}>
               Shop Collections
             </button>
           </div>
