@@ -4,7 +4,7 @@ import { Mail, Heart, ArrowUp, X, Info } from 'lucide-react';
 export default function Footer({ onCategorySelect, onPageChange, categories = [] }) {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
-  const [showPolicy, setShowPolicy] = useState(false);
+  const [activePolicy, setActivePolicy] = useState(null); // null | 'cancellation' | 'privacy'
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -79,10 +79,10 @@ export default function Footer({ onCategorySelect, onPageChange, categories = []
           <ul>
             <li><a href="#/">Contact Support</a></li>
             <li><a href="#/">Shipping & Delivery</a></li>
-            <li><a href="#/" onClick={(e) => { e.preventDefault(); setShowPolicy(true); }}>Cancellation Policy</a></li>
+            <li><a href="#/" onClick={(e) => { e.preventDefault(); setActivePolicy('cancellation'); }}>Cancellation Policy</a></li>
             <li><a href="#/">Returns & Exchange Policy</a></li>
             <li><a href="#/" onClick={(e) => { e.preventDefault(); onPageChange('admin'); }}>Boutique Admin Portal</a></li>
-            <li><a href="#/">Privacy Policy</a></li>
+            <li><a href="#/" onClick={(e) => { e.preventDefault(); setActivePolicy('privacy'); }}>Privacy Policy</a></li>
           </ul>
         </div>
 
@@ -119,15 +119,15 @@ export default function Footer({ onCategorySelect, onPageChange, categories = []
       </div>
 
       {/* Premium Glassmorphic Cancellation Policy Modal */}
-      {showPolicy && (
-        <div className="policy-modal-overlay" onClick={() => setShowPolicy(false)}>
+      {activePolicy === 'cancellation' && (
+        <div className="policy-modal-overlay" onClick={() => setActivePolicy(null)}>
           <div className="policy-modal-card fade-in" onClick={(e) => e.stopPropagation()}>
             <div className="policy-modal-header">
               <div className="header-title-row">
                 <Info size={20} className="gold-text" />
                 <h3>Cancellation & Refund Policy</h3>
               </div>
-              <button className="policy-modal-close" onClick={() => setShowPolicy(false)}>
+              <button className="policy-modal-close" onClick={() => setActivePolicy(null)}>
                 <X size={20} />
               </button>
             </div>
@@ -151,6 +151,54 @@ export default function Footer({ onCategorySelect, onPageChange, categories = []
               <div className="policy-section contact-highlight">
                 <h4>How to Request Cancellation?</h4>
                 <p>Please email us at <strong className="gold-text">yakshbarot597@gmail.com</strong> or message us on WhatsApp at <strong>+91 98765 43210</strong> with your unique <strong>Order ID</strong>.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Premium Glassmorphic Privacy & Security Policy Modal */}
+      {activePolicy === 'privacy' && (
+        <div className="policy-modal-overlay" onClick={() => setActivePolicy(null)}>
+          <div className="policy-modal-card fade-in" onClick={(e) => e.stopPropagation()}>
+            <div className="policy-modal-header">
+              <div className="header-title-row">
+                <Info size={20} className="gold-text" />
+                <h3>Privacy & Security Policy</h3>
+              </div>
+              <button className="policy-modal-close" onClick={() => setActivePolicy(null)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="policy-modal-body">
+              <div className="policy-section">
+                <h4>Secure Order Access (URL Gating)</h4>
+                <p>
+                  To protect your shopping privacy, your order tracking dashboard is fully secured. Guessing or changing the Order ID in the URL will not reveal your details.
+                </p>
+                <ul>
+                  <li>Any guest or third-party access to an order details link requires a mandatory email address or phone number verification check.</li>
+                  <li>Only logged-in owners whose Google email matches the order can bypass verification.</li>
+                </ul>
+              </div>
+              
+              <div className="policy-section">
+                <h4>Authentication Security</h4>
+                <p>
+                  We utilize secure Google OAuth authentication. We do not store or access your personal password credentials. Only your basic public profile information (name and email) is accessed to link your orders.
+                </p>
+              </div>
+
+              <div className="policy-section">
+                <h4>Payment Data Security</h4>
+                <p>
+                  All online payments are securely processed. We do not store, log, or track credit cards, net banking login details, or UPI credentials on our databases.
+                </p>
+              </div>
+
+              <div className="policy-section contact-highlight">
+                <h4>Your Privacy Matters</h4>
+                <p>We are committed to securing your personal shopping data. If you have questions about how your info is handled, reach us at <strong className="gold-text">yakshbarot597@gmail.com</strong>.</p>
               </div>
             </div>
           </div>
