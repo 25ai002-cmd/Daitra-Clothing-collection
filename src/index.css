@@ -4254,11 +4254,72 @@ main {
   padding: 2px 6px;
 }
 
-/* Tracker searched results details */
 .tracker-results-container {
   display: flex;
   flex-direction: column;
   gap: 40px;
+}
+
+/* Tracker Security Verification Card */
+.tracker-verification-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-gold);
+  padding: 40px 30px;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 520px;
+  margin: 30px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.tracker-verification-card h3 {
+  font-family: var(--font-accent);
+  color: var(--primary-gold);
+  font-size: 1.5rem;
+  margin: 0;
+  letter-spacing: 1px;
+}
+
+.tracker-verification-card p {
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin: 0 0 10px 0;
+}
+
+.tracker-verification-card .verification-form {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+}
+
+.tracker-verification-card .tracker-input {
+  flex: 1;
+}
+
+.tracker-verification-card .verification-btn {
+  padding: 0 24px;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 500px) {
+  .tracker-verification-card .verification-form {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tracker-verification-card .verification-btn {
+    width: 100%;
+  }
 }
 
 .simulation-toolbar {

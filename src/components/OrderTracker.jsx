@@ -17,6 +17,11 @@ export default function OrderTracker({ user }) {
   const [popupType, setPopupType] = useState('success'); // 'success' | 'warning' | 'error'
   const detailsRef = useRef(null);
 
+  // Security verification states for tracking order
+  const [verificationRequired, setVerificationRequired] = useState(false);
+  const [verifyEmailOrPhone, setVerifyEmailOrPhone] = useState('');
+  const [verifyError, setVerifyError] = useState('');
+
   // Statuses: 0=Placed, 1=Processing, 2=Dispatched, 3=Out for Delivery, 4=Delivered, 5=Cancelled
   const STATUSES = [
     { label: 'Order Placed',      desc: 'We have received your order request.' },
@@ -107,6 +112,51 @@ export default function OrderTracker({ user }) {
       return () => clearTimeout(timer);
     }
   }, [searchedOrder]);
+
+  // Check security verification requirements for the selected order
+  useEffect(() => {
+    if (searchedOrder) {
+      // Check if it's a recent order placed in this browser session
+      const recentOrders = JSON.parse(localStorage.getItem('daitra_recent_orders') || '[]');
+      const isRecent = recentOrders.includes(searchedOrder.orderId);
+      
+      // Check if matches the currently logged-in user
+      const matchesLoggedInUser = user && user.email && searchedOrder.customerInfo.email && 
+        (user.email.toLowerCase() === searchedOrder.customerInfo.email.toLowerCase());
+        
+      if (isRecent || matchesLoggedInUser) {
+        setVerificationRequired(false);
+      } else {
+        setVerificationRequired(true);
+      }
+      setVerifyEmailOrPhone('');
+      setVerifyError('');
+    } else {
+      setVerificationRequired(false);
+    }
+  }, [searchedOrder, user]);
+
+  const handleVerifyOrder = (e) => {
+    if (e) e.preventDefault();
+    if (!searchedOrder) return;
+    
+    const input = verifyEmailOrPhone.trim().toLowerCase();
+    const orderEmail = searchedOrder.customerInfo.email.toLowerCase();
+    const orderPhone = searchedOrder.customerInfo.phone.trim();
+    
+    if (input === orderEmail || input === orderPhone) {
+      // Add to recent orders so they don't have to verify again in this session
+      const recent = JSON.parse(localStorage.getItem('daitra_recent_orders') || '[]');
+      if (!recent.includes(searchedOrder.orderId)) {
+        recent.push(searchedOrder.orderId);
+        localStorage.setItem('daitra_recent_orders', JSON.stringify(recent));
+      }
+      setVerificationRequired(false);
+      setVerifyError('');
+    } else {
+      setVerifyError('Verification failed. The email address or phone number does not match this order.');
+    }
+  };
 
   const handleSearchOrder = async (e) => {
     if (e) e.preventDefault();
@@ -345,8 +395,29 @@ export default function OrderTracker({ user }) {
         {/* Searched Order Details */}
         {searchedOrder && (
           <div ref={detailsRef} className="tracker-results-container fade-in">
-
-            {/* Stepper Timeline */}
+            {verificationRequired ? (
+              <div className="tracker-verification-card">
+                <AlertTriangle size={36} style={{ color: 'var(--primary-gold)', marginBottom: '8px' }} />
+                <h3>Security Verification Required</h3>
+                <p>To protect customer privacy, please verify the email address or 10-digit phone number associated with this order to view tracking details.</p>
+                <form onSubmit={handleVerifyOrder} className="verification-form">
+                  <input
+                    type="text"
+                    placeholder="Enter checkout email or phone number"
+                    value={verifyEmailOrPhone}
+                    onChange={(e) => setVerifyEmailOrPhone(e.target.value)}
+                    className="tracker-input"
+                    style={{ background: '#1a1a1a', border: '1px solid var(--border-gold)', color: '#fff', padding: '10px', borderRadius: '4px' }}
+                  />
+                  <button type="submit" className="btn btn-gold verification-btn">
+                    Verify Order
+                  </button>
+                </form>
+                {verifyError && <p className="tracker-error-msg" style={{ margin: '8px 0 0 0' }}>{verifyError}</p>}
+              </div>
+            ) : (
+              <>
+                {/* Stepper Timeline */}
             <div className="tracker-stepper">
               {STATUSES.map((step, idx) => {
                 const currentStatus = searchedOrder.status !== undefined ? searchedOrder.status : 1;
@@ -501,6 +572,8 @@ export default function OrderTracker({ user }) {
                 )}
               </div>
             </div>
+              </>
+            )}
           </div>
         )}
       </div>

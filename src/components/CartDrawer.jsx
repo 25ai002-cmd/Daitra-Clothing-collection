@@ -82,6 +82,17 @@ export default function CartDrawer({
     // Clear the cart immediately so it is persisted on page refresh
     onClearCart();
 
+    // Save order ID to localStorage recent orders for automatic verification bypass
+    try {
+      const recent = JSON.parse(localStorage.getItem('daitra_recent_orders') || '[]');
+      if (!recent.includes(id)) {
+        recent.push(id);
+        localStorage.setItem('daitra_recent_orders', JSON.stringify(recent));
+      }
+    } catch (e) {
+      console.error("Failed to save to daitra_recent_orders:", e);
+    }
+
     // Perform database save in the background
     db.saveOrder(newOrder).then(() => {
       // Dispatch event to refresh admin consoles
