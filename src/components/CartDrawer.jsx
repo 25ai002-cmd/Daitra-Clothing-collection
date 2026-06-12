@@ -75,7 +75,20 @@ export default function CartDrawer({
       status: 0 // Ordered
     };
 
-    await db.saveOrder(newOrder);
+    // Show success step and popup instantly to the customer
+    setCheckoutStep('success');
+    setShowPlacedPopup(true);
+
+    // Clear the cart immediately so it is persisted on page refresh
+    onClearCart();
+
+    // Perform database save in the background
+    db.saveOrder(newOrder).then(() => {
+      // Dispatch event to refresh admin consoles
+      window.dispatchEvent(new Event('daitra_new_order_placed'));
+    }).catch(err => {
+      console.error("Error saving order to database:", err);
+    });
 
     // Trigger real transactional email send to the owner via Brevo
     sendOrderAlertEmail(newOrder).then((res) => {
@@ -84,7 +97,7 @@ export default function CartDrawer({
       } else {
         console.warn('Real email notification failed to send to owner:', res.error);
       }
-    });
+    }).catch(err => console.warn(err));
 
     // Trigger confirmation email send to the customer
     sendCustomerConfirmationEmail(newOrder).then((res) => {
@@ -93,12 +106,7 @@ export default function CartDrawer({
       } else {
         console.warn('Confirmation email failed to send to customer:', res.error);
       }
-    });
-
-    // Dispatch event to refresh admin consoles
-    window.dispatchEvent(new Event('daitra_new_order_placed'));
-    setCheckoutStep('success');
-    setShowPlacedPopup(true);
+    }).catch(err => console.warn(err));
   };
 
   if (!isOpen) return null;
@@ -591,8 +599,6 @@ export default function CartDrawer({
                   </button>
                 </div>
 
-                <p className="success-footer-note" style={{ marginTop: '15px' }}>A confirmation email has been sent to {formData.email}.</p>
-                
                 <button className="btn btn-gold continue-shopping-btn" onClick={handleContinueShopping} style={{ marginTop: '10px', opacity: 0.8 }}>
                   CONTINUE SHOPPING
                 </button>
@@ -615,7 +621,7 @@ export default function CartDrawer({
       )}
       {/* Placed Popup Confirmation Modal */}
       {showPlacedPopup && (
-        <div className="popup-overlay" onClick={() => setShowPlacedPopup(false)}>
+        <div className="popup-overlay" onClick={handleContinueShopping}>
           <div className="popup-box" onClick={(e) => e.stopPropagation()}>
             <div className="popup-header">
               <CheckCircle2 size={48} className="success-icon" style={{ color: 'var(--primary-gold)' }} />
@@ -625,7 +631,7 @@ export default function CartDrawer({
               <p>Your order has been placed successfully. All details of your order have been sent to your email (<strong>{formData.email}</strong>).</p>
             </div>
             <div className="popup-footer">
-              <button className="btn btn-gold popup-close-btn" onClick={() => setShowPlacedPopup(false)}>
+              <button className="btn btn-gold popup-close-btn" onClick={handleContinueShopping}>
                 OK, Got It
               </button>
             </div>
