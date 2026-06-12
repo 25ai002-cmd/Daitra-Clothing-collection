@@ -3504,6 +3504,37 @@ main {
   transform: translateY(-4px);
 }
 
+.floating-whatsapp-widget {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  background-color: #25D366;
+  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.floating-whatsapp-widget:hover {
+  transform: scale(1.1) translateY(-4px);
+  box-shadow: 0 8px 30px rgba(37, 211, 102, 0.4);
+}
+
+.floating-whatsapp-widget svg {
+  color: #fff;
+  transition: transform 0.3s ease;
+}
+
+.floating-whatsapp-widget:hover svg {
+  transform: scale(1.05);
+}
+
 .coupon-emoji {
   font-size: 1.4rem;
   animation: wobble 3s infinite ease-in-out;
