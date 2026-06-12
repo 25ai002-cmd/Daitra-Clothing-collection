@@ -150,7 +150,7 @@ export default function Footer({ onCategorySelect, onPageChange, categories = []
 
               <div className="policy-section contact-highlight">
                 <h4>How to Request Cancellation?</h4>
-                <p>Please email us at <strong className="gold-text">yakshbarot597@gmail.com</strong> or message us on WhatsApp at <strong>+91 98765 43210</strong> with your unique <strong>Order ID</strong>.</p>
+                <p>Please email us at <strong className="gold-text">yakshbarot597@gmail.com</strong> or message us on WhatsApp at <strong>+91 84694 41014</strong> with your unique <strong>Order ID</strong>.</p>
               </div>
             </div>
           </div>

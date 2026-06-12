@@ -8,7 +8,7 @@ export default function StoreLocator() {
   const FAQS = [
     {
       q: "Does DAITRA provide custom sizing or alterations?",
-      a: "Yes! We specialize in custom tailoring and size custom modifications. Visit our flagship boutique in Ahmedabad or connect with our designer team on WhatsApp (+91 98765 43210) to share your specifications."
+      a: "Yes! We specialize in custom tailoring and size custom modifications. Visit our flagship boutique in Ahmedabad or connect with our designer team on WhatsApp (+91 84694 41014) to share your specifications."
     },
     {
       q: "What is your return & exchange policy?",
@@ -24,7 +24,7 @@ export default function StoreLocator() {
     },
     {
       q: "What is your order cancellation policy?",
-      a: "Orders can be cancelled free of charge within 24 hours of placement, provided they have not yet been shipped from our Ahmedabad boutique. To request cancellation, contact us at daitracouture@gmail.com or WhatsApp +91 98765 43210 with your Order ID. Refunds for online payments are processed back to the original method in 5-7 business days."
+      a: "Orders can be cancelled free of charge within 24 hours of placement, provided they have not yet been shipped from our Ahmedabad boutique. To request cancellation, contact us at daitracouture@gmail.com or WhatsApp +91 84694 41014 with your Order ID. Refunds for online payments are processed back to the original method in 5-7 business days."
     }
   ];
 
@@ -74,7 +74,7 @@ export default function StoreLocator() {
               <Phone className="detail-icon" size={22} />
               <div>
                 <h4>Contact Store</h4>
-                <p>+91 98765 43210 &nbsp;|&nbsp; daitracouture@gmail.com</p>
+                <p>+91 84694 41014 &nbsp;|&nbsp; daitracouture@gmail.com</p>
               </div>
             </div>
           </div>
