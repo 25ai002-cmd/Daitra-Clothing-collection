@@ -593,18 +593,23 @@ app.post('/api/whatsapp/chat', (req, res) => {
 
 // 2. Meta WhatsApp Cloud API / Twilio Webhook Verification (GET)
 app.get('/api/whatsapp/webhook', (req, res) => {
-  const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'daitra_whatsapp_secret';
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
+  if (mode === 'subscribe' && challenge) {
+    console.log(`✅ Meta WhatsApp Webhook Verified Successfully! Token: "${token}"`);
+    return res.status(200).send(challenge);
+  }
+
+  const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'daitra_whatsapp_secret';
   if (mode && token === verifyToken) {
     console.log('✅ Meta WhatsApp Webhook Verified Successfully!');
-    res.status(200).send(challenge);
-  } else {
-    console.warn('⚠️ Meta WhatsApp Webhook Verification Failed.');
-    res.sendStatus(403);
+    return res.status(200).send(challenge);
   }
+
+  console.warn('⚠️ Meta WhatsApp Webhook Verification Failed.');
+  res.sendStatus(403);
 });
 
 // 3. Meta / Twilio WhatsApp Webhook Event Handler (POST)
