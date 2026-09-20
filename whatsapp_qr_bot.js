@@ -37,9 +37,21 @@ async function connectToWhatsApp() {
     }
 
     if (connection === 'close') {
-      const shouldReconnect = (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut);
-      console.log('Connection closed due to:', lastDisconnect?.error, ', reconnecting:', shouldReconnect);
-      if (shouldReconnect) {
+      const statusCode = lastDisconnect?.error?.output?.statusCode;
+      const isLoggedOut = statusCode === DisconnectReason.loggedOut || statusCode === 401;
+      
+      console.log(`Connection closed (status ${statusCode}). Logged out / device removed: ${isLoggedOut}`);
+
+      if (isLoggedOut) {
+        console.log('🔄 Session expired or device unlinked. Clearing auth session to generate a fresh QR code...');
+        try {
+          fs.rmSync(authDir, { recursive: true, force: true });
+        } catch (e) {
+          console.error('Error clearing auth directory:', e);
+        }
+        connectToWhatsApp();
+      } else {
+        console.log('🔄 Reconnecting to WhatsApp...');
         connectToWhatsApp();
       }
     } else if (connection === 'open') {
