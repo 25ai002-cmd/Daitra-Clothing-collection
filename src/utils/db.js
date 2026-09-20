@@ -485,6 +485,55 @@ export const db = {
     return review;
   },
 
+  async deleteReview(reviewId) {
+    if (isCloudEnabled) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/daitra_reviews?id=eq.${reviewId}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        if (!res.ok) {
+          console.error("Failed to delete review from Supabase");
+        }
+      } catch (err) {
+        console.error("Error deleting review from Supabase:", err);
+      }
+    }
+
+    // LocalStorage Fallback
+    const reviews = await this.getReviews();
+    const updated = reviews.filter(r => r.id !== reviewId);
+    localStorage.setItem('daitra_reviews', JSON.stringify(updated));
+    window.dispatchEvent(new Event('daitra_reviews_updated'));
+    return true;
+  },
+
+  async updateReview(review) {
+    if (isCloudEnabled) {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/daitra_reviews?id=eq.${review.id}`, {
+          method: 'PATCH',
+          headers: getHeaders(),
+          body: JSON.stringify(review)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          window.dispatchEvent(new Event('daitra_reviews_updated'));
+          return data[0];
+        }
+      } catch (err) {
+        console.error("Error updating review in Supabase:", err);
+      }
+    }
+
+    // LocalStorage Fallback
+    const reviews = await this.getReviews();
+    const updated = reviews.map(r => r.id === review.id ? review : r);
+    localStorage.setItem('daitra_reviews', JSON.stringify(updated));
+    window.dispatchEvent(new Event('daitra_reviews_updated'));
+    return review;
+  },
+
   async deleteProduct(productId) {
     if (isCloudEnabled) {
       try {

@@ -29,6 +29,8 @@ const SLIDES = [
 
 export default function HeroSlider({ onShopClick }) {
   const [current, setCurrent] = useState(0);
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchEndX, setTouchEndX] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -37,8 +39,38 @@ export default function HeroSlider({ onShopClick }) {
     return () => clearInterval(timer);
   }, []);
 
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return;
+    const distance = touchStartX - touchEndX;
+    const minSwipeDistance = 40;
+
+    if (distance > minSwipeDistance) {
+      // Swiped Left -> Next Slide
+      setCurrent((prev) => (prev + 1) % SLIDES.length);
+    } else if (distance < -minSwipeDistance) {
+      // Swiped Right -> Previous Slide
+      setCurrent((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
+    }
+
+    setTouchStartX(null);
+    setTouchEndX(null);
+  };
+
   return (
-    <section className="hero-slider">
+    <section 
+      className="hero-slider"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {SLIDES.map((slide, idx) => (
         <div 
           key={idx} 

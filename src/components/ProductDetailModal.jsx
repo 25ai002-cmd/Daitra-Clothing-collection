@@ -21,12 +21,27 @@ export default function ProductDetailModal({
   const [errorMsg, setErrorMsg] = useState('');
   const [activeImgIndex, setActiveImgIndex] = useState(0);
 
+  // Touch Swipe States
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchEndX, setTouchEndX] = useState(null);
+
   // Reviews states
   const [reviews, setReviews] = useState([]);
   const [writeMode, setWriteMode] = useState(false);
   const [newReview, setNewReview] = useState({ name: '', rating: 5, comment: '' });
+  const [attachedImage, setAttachedImage] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [validationError, setValidationError] = useState('');
+
+  const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('daitra_admin_logged') === 'true';
+
+  const getMyReviewIds = () => {
+    try {
+      return JSON.parse(localStorage.getItem('daitra_my_review_ids') || '[]');
+    } catch (e) {
+      return [];
+    }
+  };
 
   useEffect(() => {
     if (!product) return;
@@ -40,6 +55,9 @@ export default function ProductDetailModal({
     setActiveImgIndex(0); // Reset index on product change
     setSelectedSize('');
     setErrorMsg('');
+
+    window.addEventListener('daitra_reviews_updated', loadReviews);
+    return () => window.removeEventListener('daitra_reviews_updated', loadReviews);
   }, [product?.id]);
 
   if (!product) return null;
@@ -51,6 +69,31 @@ export default function ProductDetailModal({
   if (product.video && !mediaList.includes(product.video)) {
     mediaList.push(product.video);
   }
+
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEndX(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return;
+    const distance = touchStartX - touchEndX;
+    const minSwipeDistance = 35;
+
+    if (distance > minSwipeDistance && mediaList.length > 1) {
+      // Swiped left -> Next image
+      setActiveImgIndex((prev) => (prev + 1) % mediaList.length);
+    } else if (distance < -minSwipeDistance && mediaList.length > 1) {
+      // Swiped right -> Prev image
+      setActiveImgIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
+    }
+
+    setTouchStartX(null);
+    setTouchEndX(null);
+  };
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -72,6 +115,28 @@ export default function ProductDetailModal({
     onClose();
   };
 
+  const whatsappMessage = encodeURIComponent(
+    `Hello DAITRA Boutique! I am interested in purchasing:\n\n*Product:* ${product.title}\n*Price:* ₹${product.price.toLocaleString('en-IN')}\n*Selected Size:* ${selectedSize || 'Not selected yet'}\n\nPlease share availability details.`
+  );
+  const whatsappUrl = `https://wa.me/918469441014?text=${whatsappMessage}`;
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setValidationError('Image size should be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAttachedImage(reader.result);
+      setValidationError('');
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     if (!newReview.name.trim() || !newReview.comment.trim()) {
@@ -80,18 +145,26 @@ export default function ProductDetailModal({
     }
     setValidationError('');
 
+    const newId = Date.now();
     const reviewObject = {
-      id: Date.now(),
+      id: newId,
       productId: product.id,
       name: newReview.name,
       rating: newReview.rating,
       date: "Just now",
       comment: newReview.comment,
+      image: attachedImage || null,
       ownerReply: null,
       verified: true
     };
 
     await db.saveReview(reviewObject);
+
+    // Save to user created review IDs
+    const myIds = getMyReviewIds();
+    myIds.push(newId);
+    localStorage.setItem('daitra_my_review_ids', JSON.stringify(myIds));
+
     const allReviews = await db.getReviews();
     const productReviews = allReviews.filter(r => r.productId === product.id);
     setReviews(productReviews);
@@ -117,12 +190,45 @@ export default function ProductDetailModal({
     window.dispatchEvent(new Event('daitra_catalog_updated'));
 
     setNewReview({ name: '', rating: 5, comment: '' });
+    setAttachedImage('');
     setSuccessMsg('Thank you! Your product review has been submitted.');
     setWriteMode(false);
     
     setTimeout(() => {
       setSuccessMsg('');
     }, 4000);
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      await db.deleteReview(reviewId);
+      const myIds = getMyReviewIds().filter(id => id !== reviewId);
+      localStorage.setItem('daitra_my_review_ids', JSON.stringify(myIds));
+
+      const allReviews = await db.getReviews();
+      const productReviews = allReviews.filter(r => r.productId === product.id);
+      setReviews(productReviews);
+
+      const newReviewsCount = productReviews.length;
+      const newAverageRating = newReviewsCount > 0 
+        ? Number((productReviews.reduce((sum, r) => sum + r.rating, 0) / newReviewsCount).toFixed(1))
+        : 5.0;
+
+      const savedProds = localStorage.getItem('daitra_db_products');
+      if (savedProds) {
+        const parsed = JSON.parse(savedProds);
+        const pIdx = parsed.findIndex(p => p.id === product.id);
+        if (pIdx > -1) {
+          parsed[pIdx].reviewsCount = newReviewsCount;
+          parsed[pIdx].rating = newAverageRating;
+          localStorage.setItem('daitra_db_products', JSON.stringify(parsed));
+        }
+      }
+
+      product.reviewsCount = newReviewsCount;
+      product.rating = newAverageRating;
+      window.dispatchEvent(new Event('daitra_catalog_updated'));
+    }
   };
 
   // Calculations for dynamic average
@@ -143,7 +249,12 @@ export default function ProductDetailModal({
         <div className="modal-content-grid">
           {/* Left: Product Images Gallery */}
           <div className="modal-image-gallery">
-            <div className="main-image-wrapper">
+            <div 
+              className="main-image-wrapper"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               {isVideo(mediaList[activeImgIndex]) ? (
                 <video 
                   src={mediaList[activeImgIndex]} 
@@ -292,6 +403,19 @@ export default function ProductDetailModal({
               </button>
             </div>
 
+            {/* WhatsApp Quick Inquiry Button */}
+            <a 
+              href={whatsappUrl}
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn-whatsapp-inquire"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.46h.005c6.56 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+              <span>Order / Inquire via WhatsApp</span>
+            </a>
+
             {/* Product Details Accents */}
             <div className="product-specifications">
               <h4 className="specs-title">Product Details</h4>
@@ -390,6 +514,36 @@ export default function ProductDetailModal({
                 />
               </div>
 
+              {/* Photo Upload for Product Review */}
+              <div className="form-group" style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Attach Outfit Photo (Optional)</label>
+                {!attachedImage ? (
+                  <label className="photo-upload-label" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 14px', backgroundColor: '#161616', border: '1px dashed var(--primary-gold)', color: 'var(--primary-gold)', borderRadius: '4px', cursor: 'pointer', fontSize: '0.78rem' }}>
+                    <Camera size={18} />
+                    <span>Upload Photo from Device</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                ) : (
+                  <div className="attached-photo-preview" style={{ position: 'relative', display: 'inline-block' }}>
+                    <img src={attachedImage} alt="Review attachment preview" style={{ width: '80px', height: '80px', objectFit: 'cover', border: '1px solid var(--primary-gold)', borderRadius: '4px' }} />
+                    <button
+                      type="button"
+                      className="remove-attached-photo"
+                      onClick={() => setAttachedImage('')}
+                      style={{ position: 'absolute', top: '-6px', right: '-6px', backgroundColor: '#ff4d4d', color: '#fff', borderRadius: '50%', padding: '2px', border: 'none', cursor: 'pointer' }}
+                      title="Remove Photo"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {validationError && (
                 <div className="review-validation-error-card" style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-red)' }}>
                   <AlertCircle size={16} />
@@ -407,41 +561,79 @@ export default function ProductDetailModal({
             {reviews.length === 0 ? (
               <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.85rem' }}>No reviews yet for this dress. Be the first to share your feedback!</p>
             ) : (
-              reviews.map((rev) => (
-                <div key={rev.id} className="review-card" style={{ padding: '20px', border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)' }}>
-                  <div className="review-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div className="reviewer-avatar" style={{ width: '36px', height: '36px', fontSize: '0.95rem', borderRadius: '50%', backgroundColor: 'var(--border-color)', color: 'var(--primary-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--primary-gold)' }}>
-                      {rev.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="reviewer-info">
-                      <div className="reviewer-name-row" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <h4 style={{ fontSize: '0.85rem', margin: 0, fontWeight: 600, color: 'var(--text-white)' }}>{rev.name}</h4>
-                        {rev.verified && <span className="verified-badge" style={{ fontSize: '0.55rem', padding: '2px 6px', color: 'var(--primary-gold)', backgroundColor: 'rgba(212, 175, 55, 0.1)' }}>Verified Buyer</span>}
-                      </div>
-                      <div className="review-meta-row" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <div className="stars-small" style={{ display: 'flex', gap: '2px' }}>
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} size={12} fill={i < rev.rating ? "var(--primary-gold)" : "transparent"} stroke="var(--primary-gold)" />
-                          ))}
+              reviews.map((rev) => {
+                const myReviewIds = getMyReviewIds();
+                const isMyReview = myReviewIds.includes(rev.id);
+                const canDelete = isAdmin || isMyReview;
+
+                return (
+                  <div key={rev.id} className="review-card" style={{ padding: '20px', border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)' }}>
+                    <div className="review-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div className="reviewer-avatar" style={{ width: '36px', height: '36px', fontSize: '0.95rem', borderRadius: '50%', backgroundColor: 'var(--border-color)', color: 'var(--primary-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--primary-gold)' }}>
+                          {rev.name.charAt(0).toUpperCase()}
                         </div>
-                        <span className="review-date" style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{rev.date}</span>
+                        <div className="reviewer-info">
+                          <div className="reviewer-name-row" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <h4 style={{ fontSize: '0.85rem', margin: 0, fontWeight: 600, color: 'var(--text-white)' }}>{rev.name}</h4>
+                            {rev.verified && <span className="verified-badge" style={{ fontSize: '0.55rem', padding: '2px 6px', color: 'var(--primary-gold)', backgroundColor: 'rgba(212, 175, 55, 0.1)' }}>Verified Buyer</span>}
+                          </div>
+                          <div className="review-meta-row" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            <div className="stars-small" style={{ display: 'flex', gap: '2px' }}>
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} size={12} fill={i < rev.rating ? "var(--primary-gold)" : "transparent"} stroke="var(--primary-gold)" />
+                              ))}
+                            </div>
+                            <span className="review-date" style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{rev.date}</span>
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Customer / Admin Delete Button */}
+                      {canDelete && (
+                        <button
+                          className="delete-review-btn"
+                          onClick={() => handleDeleteReview(rev.id)}
+                          style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', padding: '4px' }}
+                          title={isAdmin ? "Admin: Delete Review" : "Delete My Review"}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
+
+                    <p className="review-comment" style={{ fontSize: '0.85rem', marginTop: '8px', color: '#d3d3d3', fontStyle: 'italic', margin: '8px 0 0 0' }}>"{rev.comment}"</p>
+
+                    {/* Attached Photo */}
+                    {rev.image && (
+                      <div className="review-attached-photo-container" style={{ marginTop: '10px' }}>
+                        <img src={rev.image} alt={`Review by ${rev.name}`} style={{ maxWidth: '140px', maxHeight: '140px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
+                      </div>
+                    )}
+                    
+                    {rev.ownerReply && (
+                      <div className="owner-reply-box" style={{ padding: '12px', marginTop: '10px', backgroundColor: '#161616', borderLeft: '2px solid var(--primary-gold)' }}>
+                        <div className="reply-header" style={{ fontSize: '0.7rem', display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
+                          <strong style={{ color: 'var(--primary-gold)' }}>Response from the owner</strong>
+                        </div>
+                        <p style={{ fontSize: '0.8rem', marginTop: '4px', color: 'var(--text-white)', margin: '4px 0 0 0' }}>"{rev.ownerReply}"</p>
+                      </div>
+                    )}
                   </div>
-                  <p className="review-comment" style={{ fontSize: '0.85rem', marginTop: '8px', color: '#d3d3d3', fontStyle: 'italic', margin: '8px 0 0 0' }}>"{rev.comment}"</p>
-                  
-                  {rev.ownerReply && (
-                    <div className="owner-reply-box" style={{ padding: '12px', marginTop: '10px', backgroundColor: '#161616', borderLeft: '2px solid var(--primary-gold)' }}>
-                      <div className="reply-header" style={{ fontSize: '0.7rem', display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
-                        <strong style={{ color: 'var(--primary-gold)' }}>Response from the owner</strong>
-                      </div>
-                      <p style={{ fontSize: '0.8rem', marginTop: '4px', color: 'var(--text-white)', margin: '4px 0 0 0' }}>"{rev.ownerReply}"</p>
-                    </div>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
+        </div>
+
+        {/* Sticky Mobile Action Bar */}
+        <div className="mobile-modal-sticky-bar">
+          <button className="btn btn-gold mobile-sticky-btn" onClick={handleAddToCart}>
+            ADD TO BAG
+          </button>
+          <button className="btn btn-dark mobile-sticky-btn" onClick={handleBuyNow}>
+            BUY NOW
+          </button>
         </div>
       </div>
 

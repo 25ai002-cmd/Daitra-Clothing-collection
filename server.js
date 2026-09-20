@@ -457,17 +457,146 @@ app.post('/api/upload', express.raw({ limit: '50mb', type: '*/*' }), async (req,
       body: formData
     });
 
-    if (tmpfilesRes.ok) {
-      const json = await tmpfilesRes.json();
-      if (json && json.status === 'success' && json.data && json.data.url) {
-        const directUrl = json.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
-        return res.json({ url: directUrl });
-      }
-    }
-
     return res.status(500).json({ error: 'Failed to upload file to online storage.' });
   } catch (err) {
     console.error("Server upload API error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// WHATSAPP CHATBOT API ENDPOINTS
+// ==========================================
+
+// Helper logic for responding to WhatsApp bot messages
+const processBotReply = (userMessage) => {
+  const text = (userMessage || '').trim().toLowerCase();
+
+  if (text.includes('1') || text.includes('catalog') || text.includes('collection') || text.includes('kurta') || text.includes('gown') || text.includes('fusion') || text.includes('dress') || text.includes('shop')) {
+    return `👗 *DAITRA COUTURE CATALOG* 💫\n\n` +
+           `Explore our handcrafted traditional women's wear collections:\n\n` +
+           `✨ *Navy Sunflower Midi Dress*\n   Price: ₹1,899 | Sizes: S, M, L, XL, XXL\n\n` +
+           `✨ *Midnight Navy Zari Anarkali Gown*\n   Price: ₹4,999 | Sizes: S, M, L, XL, XXL\n\n` +
+           `✨ *Sage Green Embroidered Coord Set*\n   Price: ₹2,799 | Sizes: S, M, L, XL\n\n` +
+           `🛍️ *Browse Full Website:* https://daitra-clothing-collection.onrender.com/#/shop\n\n` +
+           `Reply with *MENU* for main options.`;
+  }
+
+  if (text.includes('2') || text.includes('track') || text.match(/dai-\d+/i) || text.match(/\b\d{6}\b/)) {
+    const orderIdMatch = text.match(/dai-\d+/i) || text.match(/\b\d{6}\b/);
+    if (orderIdMatch) {
+      const rawId = orderIdMatch[0].toUpperCase();
+      const queriedId = rawId.startsWith('DAI-') ? rawId : `DAI-${rawId}`;
+      return `📦 *ORDER STATUS FOR ${queriedId}*\n\n` +
+             `*Status:* Dispatched 🚚\n` +
+             `*Carrier:* Bluedart Express\n` +
+             `*Estimated Delivery:* 3 to 5 Business Days\n\n` +
+             `🚚 *Tracking Link:* https://daitra-clothing-collection.onrender.com/#/track/${queriedId}\n\n` +
+             `Reply *SUPPORT* to talk with boutique manager.`;
+    }
+    return `📦 *DAITRA Order Tracking*\n\nPlease reply with your 6-digit Order ID.\n*Example:* \`DAI-849201\` or \`Track DAI-849201\``;
+  }
+
+  if (text.includes('3') || text.includes('boutique') || text.includes('location') || text.includes('address') || text.includes('store') || text.includes('ahmedabad') || text.includes('chandkheda')) {
+    return `📍 *DAITRA DESIGNER BOUTIQUE*\n\n` +
+           `*Address:* Shop #4, Devnandan Heights, Near Tapovan Circle, Chandkheda, Ahmedabad, Gujarat - 382424 🇮🇳\n\n` +
+           `⏰ *Opening Hours:* 10:00 AM – 9:00 PM (Open 7 Days)\n` +
+           `📞 *Contact:* +91 84694 41014\n\n` +
+           `🗺️ *Google Maps:* https://maps.google.com/?q=Chandkheda+Ahmedabad\n\n` +
+           `Visit us for custom fitting, bridal trousseau consultation, and exclusive fabric previews! ✨`;
+  }
+
+  if (text.includes('4') || text.includes('offer') || text.includes('coupon') || text.includes('promo') || text.includes('discount')) {
+    return `🏷️ *DAITRA EXCLUSIVE OFFERS* 🎉\n\n` +
+           `🎁 *FIRST PURCHASE DISCOUNT*\n` +
+           `Use Code: *WELCOME10* for *10% OFF* your first order!\n\n` +
+           `✨ *FREE GIFT BOX*\n` +
+           `Get a *Free Handcrafted Silk Scrunchie & Gift Box* on all orders above ₹5,000!\n\n` +
+           `🚚 *Free Shipping PAN India & COD Available!*`;
+  }
+
+  if (text.includes('5') || text.includes('size') || text.includes('chart') || text.includes('fit') || text.includes('measurement')) {
+    return `📏 *DAITRA SIZE GUIDE (Inches)*\n\n` +
+           `• *S (36):* Chest 36" | Waist 32" | Hip 39"\n` +
+           `• *M (38):* Chest 38" | Waist 34" | Hip 41"\n` +
+           `• *L (40):* Chest 40" | Waist 36" | Hip 43"\n` +
+           `• *XL (42):* Chest 42" | Waist 38" | Hip 45"\n` +
+           `• *XXL (44):* Chest 44" | Waist 40" | Hip 47"\n\n` +
+           `All sizes crafted according to standard Indian boutique fitting. Custom tailoring available at boutique!`;
+  }
+
+  if (text.includes('6') || text.includes('support') || text.includes('owner') || text.includes('agent') || text.includes('human') || text.includes('help')) {
+    return `📞 *DAITRA CUSTOMER CARE*\n\n` +
+           `Would you like to speak directly with our boutique founder?\n\n` +
+           `💬 *WhatsApp Direct Chat:* https://wa.me/918469441014\n` +
+           `📧 *Email Support:* yakshbarot597@gmail.com\n\n` +
+           `Our manager will reply to your message within 15 minutes!`;
+  }
+
+  return `Hello! Welcome to *DAITRA Couture* ✨\n` +
+         `_When Tradition Meets Grace_\n\n` +
+         `How can I help you today? Please reply with a number or keyword:\n\n` +
+         `1️⃣ *Catalog* — Browse Kurtas, Gowns & Fusion Wear 👗\n` +
+         `2️⃣ *Track [Order ID]* — Track your order details (e.g. DAI-849201) 📦\n` +
+         `3️⃣ *Boutique* — Store address & hours in Ahmedabad 📍\n` +
+         `4️⃣ *Offers* — Get 10% OFF discount coupon code 🏷️\n` +
+         `5️⃣ *Size Guide* — View Indian measurement chart 📏\n` +
+         `6️⃣ *Support* — Speak directly with boutique owner 💬\n\n` +
+         `_Type any number (1-6) or your question below!_`;
+};
+
+// 1. Interactive Chatbot Simulator API for Website Widget
+app.post('/api/whatsapp/chat', (req, res) => {
+  try {
+    const { message } = req.body;
+    const botReply = processBotReply(message);
+    res.json({ success: true, reply: botReply, timestamp: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. Meta WhatsApp Cloud API / Twilio Webhook Verification (GET)
+app.get('/api/whatsapp/webhook', (req, res) => {
+  const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'daitra_whatsapp_secret';
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (mode && token === verifyToken) {
+    res.status(200).send(challenge);
+  } else {
+    res.sendStatus(403);
+  }
+});
+
+// 3. Meta / Twilio WhatsApp Webhook Event Handler (POST)
+app.post('/api/whatsapp/webhook', (req, res) => {
+  try {
+    const body = req.body;
+    let userMsg = '';
+    let fromPhone = '';
+
+    // Handle Meta WhatsApp Cloud API Format
+    if (body.entry && body.entry[0]?.changes[0]?.value?.messages[0]) {
+      const msgObj = body.entry[0].changes[0].value.messages[0];
+      userMsg = msgObj.text?.body || '';
+      fromPhone = msgObj.from || '';
+    } else if (body.Body) {
+      // Handle Twilio WhatsApp Webhook Format
+      userMsg = body.Body;
+      fromPhone = body.From;
+    }
+
+    if (userMsg) {
+      const replyText = processBotReply(userMsg);
+      console.log(`[WhatsApp Bot] Message from ${fromPhone}: "${userMsg}" -> Reply sent.`);
+      return res.json({ status: 'success', from: fromPhone, reply: replyText });
+    }
+
+    res.status(200).json({ status: 'no_message_processed' });
+  } catch (err) {
+    console.error("[WhatsApp Webhook Error]:", err);
     res.status(500).json({ error: err.message });
   }
 });

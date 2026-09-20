@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, ShieldAlert, CheckCircle2, Truck, ClipboardList, Search, Eye, ArrowRight, DollarSign, LogOut, PlusCircle, Settings, HelpCircle } from 'lucide-react';
+import { Package, ShieldAlert, CheckCircle2, Truck, ClipboardList, Search, Eye, ArrowRight, DollarSign, LogOut, PlusCircle, Settings, HelpCircle, Star, Trash2, MessageSquare } from 'lucide-react';
 import { sendCustomerConfirmationEmail } from '../utils/emailService';
 import { db } from '../utils/db';
 
@@ -18,9 +18,11 @@ export default function BoutiqueAdmin() {
   const [actionSuccess, setActionSuccess] = useState('');
 
   // Admin Tab Navigation
-  const [adminTab, setAdminTab] = useState('orders'); // 'orders' | 'catalog'
+  const [adminTab, setAdminTab] = useState('orders'); // 'orders' | 'catalog' | 'reviews'
 
-  // Catalog Management States
+  // Admin Reviews State
+  const [adminReviews, setAdminReviews] = useState([]);
+  const [replyInputMap, setReplyInputMap] = useState({});
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [upiId, setUpiId] = useState('daitracouture@okaxis');
@@ -73,15 +75,45 @@ export default function BoutiqueAdmin() {
     }
     loadOrders();
     loadCatalogData();
+    loadAdminReviews();
     
-    // Listen for new orders
+    // Listen for new orders & reviews
     window.addEventListener('daitra_new_order_placed', loadOrders);
-    return () => window.removeEventListener('daitra_new_order_placed', loadOrders);
+    window.addEventListener('daitra_reviews_updated', loadAdminReviews);
+    return () => {
+      window.removeEventListener('daitra_new_order_placed', loadOrders);
+      window.removeEventListener('daitra_reviews_updated', loadAdminReviews);
+    };
   }, []);
 
   const loadOrders = async () => {
     const data = await db.getOrders();
     setOrders(data);
+  };
+
+  const loadAdminReviews = async () => {
+    const data = await db.getReviews();
+    setAdminReviews(data);
+  };
+
+  const handleDeleteAdminReview = async (reviewId) => {
+    if (window.confirm('Are you sure you want to delete this customer review?')) {
+      await db.deleteReview(reviewId);
+      await loadAdminReviews();
+      setActionSuccess('Review deleted successfully!');
+      setTimeout(() => setActionSuccess(''), 3000);
+    }
+  };
+
+  const handleSaveOwnerReply = async (review) => {
+    const replyText = replyInputMap[review.id];
+    if (replyText === undefined) return;
+    
+    const updatedReview = { ...review, ownerReply: replyText.trim() || null };
+    await db.updateReview(updatedReview);
+    await loadAdminReviews();
+    setActionSuccess('Owner response updated successfully!');
+    setTimeout(() => setActionSuccess(''), 3000);
   };
 
   const loadCatalogData = async () => {
@@ -594,6 +626,13 @@ export default function BoutiqueAdmin() {
         >
           <Package size={16} />
           <span>Manage Catalog & Settings</span>
+        </button>
+        <button 
+          className={`admin-nav-btn ${adminTab === 'reviews' ? 'active' : ''}`}
+          onClick={() => setAdminTab('reviews')}
+        >
+          <Star size={16} />
+          <span>Customer Reviews ({adminReviews.length})</span>
         </button>
       </div>
 
@@ -1307,6 +1346,98 @@ export default function BoutiqueAdmin() {
                     ))}
                   </tbody>
                 </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REVIEWS MODERATION TAB */}
+      {adminTab === 'reviews' && (
+        <div className="admin-reviews-panel fade-in" style={{ margin: '20px 0' }}>
+          <div className="admin-card">
+            <div className="admin-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3>Customer Reviews Moderation</h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>View, manage, reply to, or delete customer reviews & attached photos</p>
+              </div>
+              <span className="gold-badge">{adminReviews.length} Total Reviews</span>
+            </div>
+
+            <div className="admin-card-body" style={{ padding: '20px' }}>
+              {adminReviews.length === 0 ? (
+                <p style={{ fontStyle: 'italic', color: 'var(--text-muted)' }}>No customer reviews found.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {adminReviews.map(rev => (
+                    <div key={rev.id} style={{ padding: '20px', border: '1px solid var(--border-color)', backgroundColor: 'var(--card-bg)', borderRadius: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <strong style={{ fontSize: '1rem', color: 'var(--primary-gold)' }}>{rev.name}</strong>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{rev.date}</span>
+                            {rev.productId ? (
+                              <span style={{ fontSize: '0.65rem', padding: '2px 8px', backgroundColor: '#222', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '2px' }}>Dress #{rev.productId}</span>
+                            ) : (
+                              <span style={{ fontSize: '0.65rem', padding: '2px 8px', backgroundColor: 'rgba(212,175,55,0.1)', border: '1px solid var(--primary-gold)', color: 'var(--primary-gold)', borderRadius: '2px' }}>Store Testimonial</span>
+                            )}
+                          </div>
+                          
+                          <div style={{ display: 'flex', gap: '2px', margin: '6px 0' }}>
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} size={14} fill={i < rev.rating ? "var(--primary-gold)" : "transparent"} stroke="var(--primary-gold)" />
+                            ))}
+                          </div>
+
+                          <p style={{ fontSize: '0.9rem', color: '#fff', margin: '8px 0', fontStyle: 'italic' }}>"{rev.comment}"</p>
+
+                          {/* Attached Photo */}
+                          {rev.image && (
+                            <div style={{ marginTop: '10px' }}>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Attached Customer Photo:</span>
+                              <img src={rev.image} alt={`Attachment by ${rev.name}`} style={{ maxWidth: '160px', maxHeight: '160px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--primary-gold)' }} />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Admin Delete Action */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAdminReview(rev.id)}
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', backgroundColor: 'rgba(255, 77, 77, 0.1)', border: '1px solid #ff4d4d', color: '#ff4d4d', borderRadius: '3px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}
+                          title="Delete this review"
+                        >
+                          <Trash2 size={15} />
+                          <span>Delete Review</span>
+                        </button>
+                      </div>
+
+                      {/* Owner Response Input / Display */}
+                      <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #222' }}>
+                        <label style={{ fontSize: '0.75rem', color: 'var(--primary-gold)', display: 'block', marginBottom: '6px', fontWeight: 600 }}>
+                          Owner Reply / Response:
+                        </label>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          <input
+                            type="text"
+                            placeholder="Write boutique response..."
+                            value={replyInputMap[rev.id] !== undefined ? replyInputMap[rev.id] : (rev.ownerReply || '')}
+                            onChange={(e) => setReplyInputMap(prev => ({ ...prev, [rev.id]: e.target.value }))}
+                            style={{ flex: 1, padding: '8px 12px', backgroundColor: '#181818', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.82rem' }}
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-gold"
+                            onClick={() => handleSaveOwnerReply(rev)}
+                            style={{ padding: '8px 14px', fontSize: '0.75rem' }}
+                          >
+                            Save Reply
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>

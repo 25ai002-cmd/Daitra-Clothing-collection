@@ -16,6 +16,7 @@ export default function Header({
   onWishlistClick
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [mobileImageError, setMobileImageError] = useState(false);
@@ -27,6 +28,7 @@ export default function Header({
 
   const handleNavClick = (page, selector = null) => {
     setMobileMenuOpen(false);
+    setMobileSearchOpen(false);
     if (page === 'boutique') {
       window.location.hash = '#/boutique';
       const el = document.getElementById('boutique-section');
@@ -52,11 +54,18 @@ export default function Header({
 
   const handleCategoryNav = (cat) => {
     setMobileMenuOpen(false);
+    setMobileSearchOpen(false);
     if (cat === 'all') {
       window.location.hash = '#/shop';
     } else {
       window.location.hash = `#/shop/category/${cat}`;
     }
+  };
+
+  const handleQuickSearchTag = (tag) => {
+    onSearchChange(tag);
+    setMobileSearchOpen(false);
+    window.location.hash = '#/shop';
   };
 
   return (
@@ -72,7 +81,7 @@ export default function Header({
       <div className="nav-container">
         <div className="nav-wrapper">
           {/* Mobile Menu Icon */}
-          <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <button className="mobile-menu-btn" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle menu">
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
@@ -104,7 +113,7 @@ export default function Header({
 
           {/* Right Action Icons */}
           <div className="header-actions">
-            {/* Search Bar */}
+            {/* Desktop Search Bar */}
             <div className="search-bar-wrapper">
               <input
                 type="text"
@@ -120,6 +129,15 @@ export default function Header({
               />
               <Search className="search-icon" size={18} />
             </div>
+
+            {/* Mobile Search Button */}
+            <button 
+              className="mobile-search-btn action-btn" 
+              onClick={() => setMobileSearchOpen(true)}
+              aria-label="Open mobile search"
+            >
+              <Search size={20} />
+            </button>
 
             {/* Wishlist Button */}
             <button 
@@ -244,6 +262,50 @@ export default function Header({
           )}
         </nav>
       </div>
+
+      {/* Mobile Search Bar Overlay */}
+      {mobileSearchOpen && (
+        <div className="mobile-search-overlay fade-in">
+          <div className="mobile-search-header">
+            <div className="mobile-search-input-box">
+              <Search size={18} className="mobile-search-icon" />
+              <input
+                type="text"
+                placeholder="Search kurtas, gowns, fusion wear..."
+                value={searchTerm}
+                onChange={(e) => {
+                  onSearchChange(e.target.value);
+                  if (activePage !== 'shop') {
+                    onPageChange('shop');
+                  }
+                }}
+                autoFocus
+                className="mobile-search-input"
+              />
+              {searchTerm && (
+                <button className="clear-search-btn" onClick={() => onSearchChange('')}>
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+            <button className="close-mobile-search" onClick={() => setMobileSearchOpen(false)}>
+              Cancel
+            </button>
+          </div>
+
+          <div className="mobile-search-quick-tags">
+            <span className="quick-tags-title">Popular Searches:</span>
+            <div className="quick-tags-chips">
+              <button onClick={() => handleQuickSearchTag('Kurtas')}>Kurtas & Sets</button>
+              <button onClick={() => handleQuickSearchTag('Anarkali')}>Anarkali Gowns</button>
+              <button onClick={() => handleQuickSearchTag('Silk')}>Chanderi Silk</button>
+              <button onClick={() => handleQuickSearchTag('Fusion')}>Fusion Wear</button>
+              <button onClick={() => handleQuickSearchTag('Best')}>Best Sellers</button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
+

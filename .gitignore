@@ -24,3 +24,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary cache and scratch
+__pycache__/
+scratch/
+

@@ -7125,6 +7125,582 @@ main {
   to { opacity: 1; transform: scale(1); }
 }
 
+/* ==========================================
+   MOBILE-FIRST UX ENHANCEMENTS
+   ========================================== */
+
+/* 1. Mobile Bottom Navigation Bar */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background-color: rgba(11, 11, 11, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-color);
+  z-index: 1050;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: color 0.2s ease, transform 0.2s ease;
+  padding: 4px 0;
+}
+
+.mobile-nav-item.active,
+.mobile-nav-item:active {
+  color: var(--primary-gold);
+}
+
+.mobile-nav-item.active svg {
+  stroke: var(--primary-gold);
+  transform: scale(1.1);
+}
+
+.nav-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background-color: var(--accent-red);
+  color: var(--text-white);
+  font-size: 0.6rem;
+  font-weight: 700;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+}
+
+.mobile-badge.gold {
+  background-color: var(--primary-gold);
+  color: var(--text-dark);
+}
+
+/* 2. Mobile Search Overlay */
+.mobile-search-btn {
+  display: none;
+}
+
+.mobile-search-overlay {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  width: 100%;
+  background-color: rgba(11, 11, 11, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1.5px solid var(--primary-gold);
+  padding: 16px 18px;
+  z-index: 1001;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+}
+
+.mobile-search-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-search-input-box {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mobile-search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--primary-gold);
+}
+
+.mobile-search-input {
+  width: 100%;
+  background-color: #181818;
+  border: 1px solid var(--border-gold);
+  border-radius: 20px;
+  color: var(--text-white);
+  padding: 10px 38px 10px 40px;
+  font-size: 0.9rem;
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 12px;
+  color: var(--text-muted);
+  padding: 4px;
+}
+
+.close-mobile-search {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary-gold);
+  letter-spacing: 1px;
+}
+
+.mobile-search-quick-tags {
+  margin-top: 14px;
+}
+
+.quick-tags-title {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.quick-tags-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.quick-tags-chips button {
+  background-color: #1a1a1a;
+  border: 1px solid var(--border-color);
+  color: var(--text-white);
+  padding: 6px 12px;
+  border-radius: 14px;
+  font-size: 0.72rem;
+  transition: var(--transition-fast);
+}
+
+.quick-tags-chips button:active {
+  background-color: var(--primary-gold);
+  color: var(--text-dark);
+}
+
+/* 3. Mobile Card Quick Add */
+.mobile-card-actions {
+  display: none;
+  margin-top: 10px;
+}
+
+.btn-mobile-quick-add {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: rgba(212, 175, 55, 0.12);
+  border: 1px solid var(--primary-gold);
+  color: var(--primary-gold);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 3px;
+  transition: var(--transition-fast);
+}
+
+.btn-mobile-quick-add:active {
+  background-color: var(--primary-gold);
+  color: var(--text-dark);
+}
+
+.mobile-size-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.mobile-size-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mobile-size-pill-btn {
+  flex: 1;
+  min-width: 30px;
+  height: 32px;
+  background-color: #1a1a1a;
+  border: 1px solid var(--border-color);
+  color: var(--text-white);
+  font-size: 0.7rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  transition: var(--transition-fast);
+}
+
+.mobile-size-pill-btn:active {
+  background-color: var(--primary-gold);
+  color: var(--text-dark);
+  border-color: var(--primary-gold);
+}
+
+/* 4. Mobile Sticky Action Bar in Product Modal */
+.mobile-modal-sticky-bar {
+  display: none;
+}
+
+/* 5. WhatsApp Buttons */
+.btn-whatsapp-inquire,
+.btn-cart-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 18px;
+  background-color: #25D366;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-radius: 4px;
+  margin-top: 12px;
+  transition: var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+}
+
+.btn-whatsapp-inquire:hover,
+.btn-cart-whatsapp:hover {
+  background-color: #1ebd5a;
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.4);
+}
+
+/* ── Mobile Viewport Overrides (≤768px) ── */
+@media (max-width: 768px) {
+  .app-container {
+    padding-bottom: calc(65px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+  }
+
+  .mobile-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-card-actions {
+    display: block;
+  }
+
+  .floating-whatsapp-widget,
+  .floating-coupon-widget {
+    bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .toast-notification-card {
+    bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Pinned bottom bar inside Product Modal on mobile */
+  .mobile-modal-sticky-bar {
+    display: flex;
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(11, 11, 11, 0.98);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-gold);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px;
+    gap: 10px;
+    z-index: 100;
+  }
+
+  .mobile-sticky-btn {
+    flex: 1;
+    padding: 12px 10px;
+    font-size: 0.78rem;
+    letter-spacing: 1px;
+  }
+}
+
+/* ==========================================
+   WHATSAPP CHATBOT MODAL STYLING
+   ========================================== */
+
+.whatsapp-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.whatsapp-modal-box {
+  width: 100%;
+  max-width: 440px;
+  height: 620px;
+  max-height: 90vh;
+  background-color: #0b141a;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.whatsapp-chat-header {
+  background-color: #1f2c34;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #2a3942;
+}
+
+.whatsapp-avatar-wrap {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.whatsapp-bot-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--primary-gold);
+}
+
+.online-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  background-color: #25D366;
+  border-radius: 50%;
+  border: 2px solid #1f2c34;
+}
+
+.whatsapp-header-info {
+  flex: 1;
+}
+
+.whatsapp-bot-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #e9edef;
+  margin: 0;
+}
+
+.whatsapp-bot-status {
+  font-size: 0.68rem;
+  color: #00a884;
+}
+
+.whatsapp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.whatsapp-external-link,
+.whatsapp-close-btn {
+  color: #aebac1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.whatsapp-external-link:hover,
+.whatsapp-close-btn:hover {
+  color: #ffffff;
+}
+
+.whatsapp-chat-body {
+  flex: 1;
+  background-color: #0b141a;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
+  background-size: 16px 16px;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.whatsapp-encrypted-banner {
+  background-color: #182229;
+  color: #8696a0;
+  font-size: 0.68rem;
+  text-align: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  border: 1px solid #222d34;
+}
+
+.whatsapp-bubble-row {
+  display: flex;
+  width: 100%;
+}
+
+.whatsapp-bubble-row.bot {
+  justify-content: flex-start;
+}
+
+.whatsapp-bubble-row.user {
+  justify-content: flex-end;
+}
+
+.whatsapp-bubble {
+  max-width: 84%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  position: relative;
+  word-wrap: break-word;
+}
+
+.whatsapp-bubble.bot {
+  background-color: #202c33;
+  color: #e9edef;
+  border-top-left-radius: 0;
+}
+
+.whatsapp-bubble.user {
+  background-color: #005c4b;
+  color: #e9edef;
+  border-top-right-radius: 0;
+}
+
+.whatsapp-bubble.typing {
+  font-style: italic;
+  color: #8696a0;
+  font-size: 0.78rem;
+}
+
+.whatsapp-msg-time {
+  display: block;
+  text-align: right;
+  font-size: 0.6rem;
+  color: #8696a0;
+  margin-top: 4px;
+}
+
+.whatsapp-quick-chips {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: #111b21;
+  overflow-x: auto;
+  border-top: 1px solid #222d34;
+  white-space: nowrap;
+}
+
+.whatsapp-quick-chips button {
+  background-color: #202c33;
+  color: #00a884;
+  border: 1px solid #2a3942;
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.whatsapp-quick-chips button:hover,
+.whatsapp-quick-chips button:active {
+  background-color: #00a884;
+  color: #111b21;
+}
+
+.whatsapp-chat-input-bar {
+  background-color: #202c33;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #2a3942;
+}
+
+.whatsapp-input {
+  flex: 1;
+  background-color: #2a3942;
+  border: none;
+  border-radius: 20px;
+  color: #e9edef;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+}
+
+.whatsapp-input::placeholder {
+  color: #8696a0;
+}
+
+.whatsapp-send-btn {
+  background-color: #00a884;
+  color: #111b21;
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.whatsapp-send-btn:hover {
+  transform: scale(1.08);
+}
+
+
+
 
 
 

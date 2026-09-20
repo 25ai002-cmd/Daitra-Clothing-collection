@@ -1,24 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MessageSquare, Check, Calendar, AlertCircle } from 'lucide-react';
+import { Star, MessageSquare, Check, Calendar, AlertCircle, Camera, Trash2, X } from 'lucide-react';
 import { db } from '../utils/db';
 
 export default function ReviewPortal() {
   const [reviews, setReviews] = useState([]);
   const [writeMode, setWriteMode] = useState(false);
   const [newReview, setNewReview] = useState({ name: '', rating: 5, comment: '' });
+  const [attachedImage, setAttachedImage] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [validationError, setValidationError] = useState('');
 
+  const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('daitra_admin_logged') === 'true';
+
+  const getMyReviewIds = () => {
+    try {
+      return JSON.parse(localStorage.getItem('daitra_my_review_ids') || '[]');
+    } catch (e) {
+      return [];
+    }
+  };
+
+  const loadReviews = async () => {
+    const data = await db.getReviews();
+    setReviews(data.filter(r => !r.productId));
+  };
+
   useEffect(() => {
-    const loadReviews = async () => {
-      const data = await db.getReviews();
-      setReviews(data.filter(r => !r.productId));
-    };
     loadReviews();
+    window.addEventListener('daitra_reviews_updated', loadReviews);
+    return () => window.removeEventListener('daitra_reviews_updated', loadReviews);
   }, []);
 
   const handleStarClick = (ratingValue) => {
     setNewReview(prev => ({ ...prev, rating: ratingValue }));
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setValidationError('Image size should be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAttachedImage(reader.result);
+      setValidationError('');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleReviewSubmit = async (e) => {
@@ -29,22 +60,30 @@ export default function ReviewPortal() {
     }
     setValidationError('');
 
+    const newId = Date.now();
     const reviewObject = {
-      id: Date.now(),
+      id: newId,
       name: newReview.name,
       rating: newReview.rating,
       date: "Just now",
       comment: newReview.comment,
+      image: attachedImage || null,
       ownerReply: null,
-      verified: false,
+      verified: true,
       productId: null
     };
 
     await db.saveReview(reviewObject);
-    const updatedReviews = await db.getReviews();
-    setReviews(updatedReviews.filter(r => !r.productId));
+    
+    // Save to user created review IDs in localStorage
+    const myIds = getMyReviewIds();
+    myIds.push(newId);
+    localStorage.setItem('daitra_my_review_ids', JSON.stringify(myIds));
+
+    await loadReviews();
 
     setNewReview({ name: '', rating: 5, comment: '' });
+    setAttachedImage('');
     setSuccessMsg('Thank you! Your review has been added successfully.');
     setWriteMode(false);
 
@@ -53,10 +92,22 @@ export default function ReviewPortal() {
     }, 4000);
   };
 
+  const handleDeleteReview = async (reviewId) => {
+    if (window.confirm('Are you sure you want to delete this review?')) {
+      await db.deleteReview(reviewId);
+      // Remove from user's created IDs
+      const myIds = getMyReviewIds().filter(id => id !== reviewId);
+      localStorage.setItem('daitra_my_review_ids', JSON.stringify(myIds));
+      await loadReviews();
+    }
+  };
+
   // Calculations
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
     : "5.0";
+
+  const myReviewIds = getMyReviewIds();
 
   return (
     <section id="reviews-section" className="reviews-section">
@@ -82,18 +133,18 @@ export default function ReviewPortal() {
           <div className="rating-bars-block">
             <div className="rating-bar-row">
               <span>5 ★</span>
-              <div className="bar-bg"><div className="bar-fill" style={{ width: '100%' }}></div></div>
+              <div className="bar-bg"><div className="bar-fill" style={{ width: `${reviews.length > 0 ? (reviews.filter(r => r.rating === 5).length / reviews.length) * 100 : 100}%` }}></div></div>
               <span>{reviews.filter(r => r.rating === 5).length}</span>
             </div>
             <div className="rating-bar-row">
               <span>4 ★</span>
-              <div className="bar-bg"><div className="bar-fill" style={{ width: `${(reviews.filter(r => r.rating === 4).length / reviews.length) * 100}%` }}></div></div>
+              <div className="bar-bg"><div className="bar-fill" style={{ width: `${reviews.length > 0 ? (reviews.filter(r => r.rating === 4).length / reviews.length) * 100 : 0}%` }}></div></div>
               <span>{reviews.filter(r => r.rating === 4).length}</span>
             </div>
             <div className="rating-bar-row">
               <span>3 ★</span>
-              <div className="bar-bg"><div className="bar-fill" style={{ width: '0%' }}></div></div>
-              <span>0</span>
+              <div className="bar-bg"><div className="bar-fill" style={{ width: `${reviews.length > 0 ? (reviews.filter(r => r.rating === 3).length / reviews.length) * 100 : 0}%` }}></div></div>
+              <span>{reviews.filter(r => r.rating === 3).length}</span>
             </div>
             <div className="rating-bar-row">
               <span>2 ★</span>
@@ -172,6 +223,35 @@ export default function ReviewPortal() {
               />
             </div>
 
+            {/* Customer Photo Upload */}
+            <div className="form-group">
+              <label>Attach Outfit Photo (Optional)</label>
+              {!attachedImage ? (
+                <label className="photo-upload-label">
+                  <Camera size={20} />
+                  <span>Upload Photo from Phone / Camera</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              ) : (
+                <div className="attached-photo-preview">
+                  <img src={attachedImage} alt="Review attachment preview" />
+                  <button
+                    type="button"
+                    className="remove-attached-photo"
+                    onClick={() => setAttachedImage('')}
+                    title="Remove Photo"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              )}
+            </div>
+
             {validationError && (
               <div className="review-validation-error-card">
                 <AlertCircle size={16} />
@@ -187,45 +267,67 @@ export default function ReviewPortal() {
 
         {/* Reviews List */}
         <div className="reviews-list">
-          {reviews.map((rev) => (
-            <div key={rev.id} className="review-card">
-              <div className="review-header">
-                <div className="reviewer-avatar">
-                  {rev.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="reviewer-info">
-                  <div className="reviewer-name-row">
-                    <h4>{rev.name}</h4>
-                    {rev.verified && <span className="verified-badge">Verified Customer</span>}
-                  </div>
-                  <div className="review-meta-row">
-                    <div className="stars-small">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={14} fill={i < rev.rating ? "var(--primary-gold)" : "transparent"} stroke="var(--primary-gold)" />
-                      ))}
-                    </div>
-                    <span className="review-date">
-                      <Calendar size={12} />
-                      {rev.date}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              <p className="review-comment">"{rev.comment}"</p>
+          {reviews.map((rev) => {
+            const isMyReview = myReviewIds.includes(rev.id);
+            const canDelete = isAdmin || isMyReview;
 
-              {/* Owner Response Box */}
-              {rev.ownerReply && (
-                <div className="owner-reply-box">
-                  <div className="reply-header">
-                    <strong>Response from the owner</strong>
-                    <span>a week ago</span>
+            return (
+              <div key={rev.id} className="review-card">
+                <div className="review-header">
+                  <div className="reviewer-avatar">
+                    {rev.name.charAt(0).toUpperCase()}
                   </div>
-                  <p>"{rev.ownerReply}"</p>
+                  <div className="reviewer-info">
+                    <div className="reviewer-name-row">
+                      <h4>{rev.name}</h4>
+                      {rev.verified && <span className="verified-badge">Verified Customer</span>}
+                    </div>
+                    <div className="review-meta-row">
+                      <div className="stars-small">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={14} fill={i < rev.rating ? "var(--primary-gold)" : "transparent"} stroke="var(--primary-gold)" />
+                        ))}
+                      </div>
+                      <span className="review-date">
+                        <Calendar size={12} />
+                        {rev.date}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Customer / Admin Delete Button */}
+                  {canDelete && (
+                    <button
+                      className="delete-review-btn"
+                      onClick={() => handleDeleteReview(rev.id)}
+                      title={isAdmin ? "Admin: Delete Review" : "Delete My Review"}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+                
+                <p className="review-comment">"{rev.comment}"</p>
+
+                {/* Attached Customer Photo */}
+                {rev.image && (
+                  <div className="review-attached-photo-container">
+                    <img src={rev.image} alt={`Review photo by ${rev.name}`} className="review-attached-photo" />
+                  </div>
+                )}
+
+                {/* Owner Response Box */}
+                {rev.ownerReply && (
+                  <div className="owner-reply-box">
+                    <div className="reply-header">
+                      <strong>Response from the owner</strong>
+                    </div>
+                    <p>"{rev.ownerReply}"</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

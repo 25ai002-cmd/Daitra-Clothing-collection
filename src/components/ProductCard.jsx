@@ -1,5 +1,5 @@
-import React from 'react';
-import { Heart, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { Heart, Star, Plus } from 'lucide-react';
 
 export default function ProductCard({
   product,
@@ -8,11 +8,18 @@ export default function ProductCard({
   onToggleWishlist,
   isWishlisted
 }) {
+  const [mobileQuickAddOpen, setMobileQuickAddOpen] = useState(false);
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
   const handleQuickAdd = (e, size) => {
     e.stopPropagation();
     onAddToCart(product, size);
+    setMobileQuickAddOpen(false);
+  };
+
+  const handleMobileToggle = (e) => {
+    e.stopPropagation();
+    setMobileQuickAddOpen(!mobileQuickAddOpen);
   };
 
   return (
@@ -35,6 +42,7 @@ export default function ProductCard({
             onToggleWishlist(product.id);
           }}
           title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+          aria-label="Wishlist"
         >
           <Heart size={18} fill={isWishlisted ? "var(--primary-gold)" : "transparent"} />
         </button>
@@ -45,7 +53,7 @@ export default function ProductCard({
           <img src={product.images[1]} alt={product.title} className="product-card-img hover-img" />
         )}
 
-        {/* Quick Add Slide-up Panel */}
+        {/* Desktop Quick Add Slide-up Panel */}
         <div className="quick-add-panel">
           <span className="quick-add-title">QUICK ADD</span>
           <div className="quick-add-sizes">
@@ -79,7 +87,35 @@ export default function ProductCard({
             </>
           )}
         </div>
+
+        {/* Mobile Touch Quick Add Button & Row */}
+        <div className="mobile-card-actions">
+          {!mobileQuickAddOpen ? (
+            <button 
+              type="button"
+              className="btn-mobile-quick-add" 
+              onClick={handleMobileToggle}
+            >
+              <Plus size={14} /> Quick Add
+            </button>
+          ) : (
+            <div className="mobile-size-pills-row" onClick={(e) => e.stopPropagation()}>
+              <span className="mobile-size-label">Size:</span>
+              {product.sizes.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  className="mobile-size-pill-btn"
+                  onClick={(e) => handleQuickAdd(e, size)}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
