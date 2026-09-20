@@ -1,4 +1,4 @@
-import { db } from './db';
+import { db } from './db.js';
 
 export async function handleWhatsAppMessage(userMessage) {
   if (!userMessage || typeof userMessage !== 'string') {
