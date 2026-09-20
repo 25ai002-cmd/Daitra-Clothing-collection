@@ -545,6 +545,41 @@ const processBotReply = (userMessage) => {
          `_Type any number (1-6) or your question below!_`;
 };
 
+// Meta WhatsApp Cloud API Configurations
+const META_WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || 'EAAPrdlJBZBZAEBSj88TaZAqqrvQDTr7vDWYnZA3Omec7v7P8uIa1PIs7YPDcE4n6sC7CPjqyOBvoi9fmSTzkyoCwMlGmPicf8wMKjzFn0mcusQyKXPd8PP0jGMxUle61ZBD0UttGcfwGoQ5S0qsaOFZBbCn5Vd5RAv90mGs3sJkT9jaPWsPZCvR8ydJYHyFDlpzs8DAZAxzEc1p95C1B6U0ZCSAQUfgO8gKhIkXGyxlZCHZBYjTJ6DN6fNIrZAo8aA6BnugZCVRIg0Duk64GXOPiU2GLrzu9u6WMZD';
+const META_PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID || '1357988067390761';
+const META_BUSINESS_ACCOUNT_ID = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || '953979850442776';
+
+// Helper function to send messages via Meta WhatsApp Cloud API
+async function sendMetaWhatsAppMessage(toPhone, textBody) {
+  try {
+    const url = `https://graph.facebook.com/v19.0/${META_PHONE_NUMBER_ID}/messages`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${META_WHATSAPP_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: toPhone,
+        type: 'text',
+        text: {
+          preview_url: true,
+          body: textBody
+        }
+      })
+    });
+
+    const data = await response.json();
+    console.log(`[Meta WhatsApp API Response]:`, JSON.stringify(data));
+    return data;
+  } catch (err) {
+    console.error(`[Meta WhatsApp Send Error]:`, err);
+  }
+}
+
 // 1. Interactive Chatbot Simulator API for Website Widget
 app.post('/api/whatsapp/chat', (req, res) => {
   try {
@@ -564,14 +599,16 @@ app.get('/api/whatsapp/webhook', (req, res) => {
   const challenge = req.query['hub.challenge'];
 
   if (mode && token === verifyToken) {
+    console.log('✅ Meta WhatsApp Webhook Verified Successfully!');
     res.status(200).send(challenge);
   } else {
+    console.warn('⚠️ Meta WhatsApp Webhook Verification Failed.');
     res.sendStatus(403);
   }
 });
 
 // 3. Meta / Twilio WhatsApp Webhook Event Handler (POST)
-app.post('/api/whatsapp/webhook', (req, res) => {
+app.post('/api/whatsapp/webhook', async (req, res) => {
   try {
     const body = req.body;
     let userMsg = '';
@@ -582,15 +619,21 @@ app.post('/api/whatsapp/webhook', (req, res) => {
       const msgObj = body.entry[0].changes[0].value.messages[0];
       userMsg = msgObj.text?.body || '';
       fromPhone = msgObj.from || '';
+
+      if (userMsg && fromPhone) {
+        const replyText = processBotReply(userMsg);
+        console.log(`[Meta WhatsApp Bot] Message from ${fromPhone}: "${userMsg}" -> Sending reply...`);
+        
+        // Dispatch reply back via Meta Cloud API
+        await sendMetaWhatsAppMessage(fromPhone, replyText);
+
+        return res.status(200).json({ status: 'success', from: fromPhone, reply: replyText });
+      }
     } else if (body.Body) {
       // Handle Twilio WhatsApp Webhook Format
       userMsg = body.Body;
       fromPhone = body.From;
-    }
-
-    if (userMsg) {
       const replyText = processBotReply(userMsg);
-      console.log(`[WhatsApp Bot] Message from ${fromPhone}: "${userMsg}" -> Reply sent.`);
       return res.json({ status: 'success', from: fromPhone, reply: replyText });
     }
 
