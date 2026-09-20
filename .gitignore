@@ -28,4 +28,6 @@ dist-ssr
 # Temporary cache and scratch
 __pycache__/
 scratch/
+auth_info_baileys/
+
 
