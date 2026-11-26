@@ -3250,9 +3250,12 @@ main {
   }
 
   /* ── FLOATING COUPON ── */
-  .floating-coupon-widget {
+  .floating-widgets-container {
     bottom: 16px;
     left: 12px;
+    gap: 10px;
+  }
+  .floating-coupon-widget {
     padding: 8px 12px;
     gap: 8px;
   }
@@ -3479,13 +3482,20 @@ main {
 }
 
 /* ==========================================
-   FLOATING INTERACTIVE COUPON WIDGET
+   FLOATING INTERACTIVE COUPON & WHATSAPP WIDGETS
    ========================================== */
 
-.floating-coupon-widget {
+.floating-widgets-container {
   position: fixed;
   bottom: 30px;
   left: 30px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 998;
+}
+
+.floating-coupon-widget {
   background-color: #0e0e0e;
   border: 1.5px solid var(--border-gold);
   padding: 12px 18px;
@@ -3493,7 +3503,6 @@ main {
   align-items: center;
   gap: 12px;
   box-shadow: 0 5px 25px rgba(0,0,0,0.6);
-  z-index: 998;
   cursor: pointer;
   transition: var(--transition-smooth);
 }
@@ -3505,18 +3514,15 @@ main {
 }
 
 .floating-whatsapp-widget {
-  position: fixed;
-  bottom: 30px;
-  left: 30px;
   background-color: #25D366;
   border-radius: 50%;
   width: 52px;
   height: 52px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
-  z-index: 998;
   cursor: pointer;
   transition: var(--transition-smooth);
 }
@@ -7418,8 +7424,7 @@ main {
     display: block;
   }
 
-  .floating-whatsapp-widget,
-  .floating-coupon-widget {
+  .floating-widgets-container {
     bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
